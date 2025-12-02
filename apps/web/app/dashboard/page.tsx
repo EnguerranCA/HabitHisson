@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { signOut } from 'next-auth/react'
 import CreateHabitForm from '@/components/create-habit-form'
 import CatchUpModal from '@/components/catch-up-modal'
+import { MobileNav } from '@/components/mobile-nav'
 import { getUserHabits, toggleHabit, checkIfShouldShowCatchUp, getMissedHabitsFromYesterday } from '@/lib/habit-actions'
 
 interface HabitLog {
@@ -39,14 +40,27 @@ export default function Dashboard() {
   const [togglingHabit, setTogglingHabit] = useState<number | null>(null)
   const today = new Date()
 
+  // Fonction de chargement des habitudes
+  async function loadHabits() {
+    try {
+      setLoading(true)
+      const userHabits = await getUserHabits()
+      setHabits(userHabits)
+    } catch (error) {
+      console.error('Erreur lors du chargement des habitudes:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Chargement initial + vérification rattrapage
   useEffect(() => {
     async function initialize() {
       try {
         // Charger les habitudes
-        const userHabits = await getUserHabits()
-        setHabits(userHabits)
+        await loadHabits()
 
-        // Vérifier s'il faut afficher le popup de rattrapage
+        // Vérifier s'il faut afficher le popup de rattrapage (seulement au premier chargement)
         const shouldShow = await checkIfShouldShowCatchUp()
         if (shouldShow) {
           const missed = await getMissedHabitsFromYesterday()
@@ -57,8 +71,6 @@ export default function Dashboard() {
         }
       } catch (error) {
         console.error('Erreur lors du chargement:', error)
-      } finally {
-        setLoading(false)
       }
     }
     
@@ -110,15 +122,6 @@ export default function Dashboard() {
     setShowCreateForm(false)
     // Recharger les habitudes
     loadHabits()
-  }
-
-  async function loadHabits() {
-    try {
-      const userHabits = await getUserHabits()
-      setHabits(userHabits)
-    } catch (error) {
-      console.error('Erreur lors du chargement des habitudes:', error)
-    }
   }
 
   if (loading) {
@@ -285,6 +288,8 @@ export default function Dashboard() {
             }}
           />
         )}
+
+        <MobileNav />
       </div>
     </div>
   )
