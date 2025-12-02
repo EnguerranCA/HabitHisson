@@ -1,12 +1,13 @@
 'use client'
 
-import { useFormState, useFormStatus } from 'react-dom'
+import { useActionState } from 'react'
+import { useFormStatus } from 'react-dom'
 import Link from 'next/link'
 import { createUser, FormState } from '@/lib/actions'
 
 export default function SignUpPage() {
   const initialState: FormState = { message: '', errors: {} }
-  const [state, dispatch] = useFormState(createUser, initialState)
+  const [state, dispatch] = useActionState(createUser, initialState)
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-100 to-amber-50">

@@ -1,6 +1,7 @@
 'use client'
 
-import { useFormState, useFormStatus } from 'react-dom'
+import { useActionState } from 'react'
+import { useFormStatus } from 'react-dom'
 import { useState } from 'react'
 import { createHabit, HabitFormState } from '@/lib/habit-actions'
 
@@ -8,7 +9,7 @@ const emojis = ['✅', '📚', '🏃‍♂️', '💧', '🥗', '💪', '😴', 
 
 export default function CreateHabitForm({ onClose }: { onClose: () => void }) {
   const initialState: HabitFormState = { message: '', errors: {} }
-  const [state, dispatch] = useFormState(createHabit, initialState)
+  const [state, dispatch] = useActionState(createHabit, initialState)
   const [selectedEmoji, setSelectedEmoji] = useState('✅')
 
   return (
