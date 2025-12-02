@@ -1,11 +1,9 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -13,40 +11,62 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ═══════════════════════════════════════════════════════════
+// 👤 UTILISATEURS & AUTHENTIFICATION
+// ═══════════════════════════════════════════════════════════
+
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String
-  password  String
-  level     Int      @default(1)
-  xp        Int      @default(0)
-  hedgehogState String @default("baby") // baby, child, teen, adult, elder
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int       @id @default(autoincrement())
+  email         String    @unique
+  name          String
+  password      String    // Hashé avec bcrypt
+  level         Int       @default(1)
+  xp            Int       @default(0)  // Glands collectés
+  hedgehogState String    @default("baby") // baby, child, teen, adult, elder
+  profilePublic Boolean   @default(false) // US16: profils publics opt-in
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   // Relations
-  habits    Habit[]
-  habitLogs HabitLog[]
-  userProgress UserProgress?
+  habits          Habit[]
+  habitLogs       HabitLog[]
+  userProgress    UserProgress?
+  focusSessions   FocusSession[]
+  userBadges      UserBadge[]
+  userDecorations UserDecoration[]
+
+  @@index([level, xp]) // Pour les classements (US15)
 }
+
+// ═══════════════════════════════════════════════════════════
+// 📝 HABITUDES
+// ═══════════════════════════════════════════════════════════
 
 model Habit {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  name      String   @db.VarChar(50)
-  emoji     String   @default("✅")
-  type      HabitType @default(GOOD) // GOOD or BAD
-  frequency Frequency @default(DAILY) // DAILY or WEEKLY
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int        @id @default(autoincrement())
+  userId        Int
+  name          String     @db.VarChar(50)
+  emoji         String     @default("✅")
+  type          HabitType  @default(GOOD) // GOOD or BAD
+  frequency     Frequency  @default(DAILY) // DAILY or WEEKLY
+  isActive      Boolean    @default(true) // Soft delete
+  decorationId  Int?       // US12: Lien avec élément de décor
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   // Relations  
-  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  habitLogs HabitLog[]
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  habitLogs     HabitLog[]
+  focusSessions FocusSession[]
+  decoration    DecorationItem?  @relation(fields: [decorationId], references: [id])
 
-  @@index([userId])
+  @@index([userId, isActive])
+  @@index([userId, createdAt])
 }
+
+// ═══════════════════════════════════════════════════════════
+// 📊 LOGS & COMPLÉTION DES HABITUDES
+// ═══════════════════════════════════════════════════════════
 
 model HabitLog {
   id        Int      @id @default(autoincrement())
@@ -54,7 +74,7 @@ model HabitLog {
   userId    Int
   date      DateTime @db.Date
   completed Boolean  @default(false)
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) // Pour tracking des rattrapages
 
   // Relations
   habit     Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
@@ -62,22 +82,126 @@ model HabitLog {
 
   @@unique([habitId, date])
   @@index([userId, date])
+  @@index([habitId, date, completed]) // Pour calcul streaks
 }
 
+// ═══════════════════════════════════════════════════════════
+// 🎮 PROGRESSION & GAMIFICATION
+// ═══════════════════════════════════════════════════════════
+
 model UserProgress {
-  id            Int      @id @default(autoincrement())
-  userId        Int      @unique
-  totalXp       Int      @default(0)
-  currentLevel  Int      @default(1)
-  streakRecord  Int      @default(0)
-  lastActivity  DateTime?
-  hedgehogItems Json?    // Store unlocked decorations
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id             Int       @id @default(autoincrement())
+  userId         Int       @unique
+  totalXp        Int       @default(0)
+  currentLevel   Int       @default(1)
+  bestStreak     Int       @default(0) // Meilleur streak global tous habitudes confondues
+  lastLoginDate  DateTime? // Pour popup rattrapage (US6)
+  lastActivity   DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+// ═══════════════════════════════════════════════════════════
+// 🌳 DÉCORATIONS & ENVIRONNEMENT (Phase 2)
+// ═══════════════════════════════════════════════════════════
+
+model DecorationItem {
+  id          Int      @id @default(autoincrement())
+  name        String
+  category    String   // tree, flower, rock, crystal, etc.
+  unlockLevel Int      // Niveau requis pour débloquer
+  imagePath   String   // Chemin vers l'asset
+  rarity      Rarity   @default(COMMON)
+  createdAt   DateTime @default(now())
+
+  // Relations
+  userDecorations UserDecoration[]
+  habits          Habit[] // US12: habitudes liées à cet élément
+
+  @@index([unlockLevel])
+  @@index([category, unlockLevel])
+}
+
+model UserDecoration {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  decorationId  Int
+  positionX     Float?   // Position dans l'environnement
+  positionY     Float?
+  scale         Float    @default(1.0)
+  growthLevel   Int      @default(1) // US12: croissance selon habitudes
+  acquiredAt    DateTime @default(now())
+
+  // Relations
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  decoration DecorationItem @relation(fields: [decorationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, decorationId, positionX, positionY])
+  @@index([userId])
+}
+
+// ═══════════════════════════════════════════════════════════
+// ⏱️ SESSIONS DE FOCUS (Phase 3)
+// ═══════════════════════════════════════════════════════════
+
+model FocusSession {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  habitId     Int?      // Association optionnelle à une habitude
+  duration    Int       // En minutes (15, 25, 45)
+  xpEarned    Int       // XP gagné pour cette session
+  completed   Boolean   @default(false)
+  interrupted Boolean   @default(false) // Pénalité si interrompu
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  // Relations
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  habit Habit? @relation(fields: [habitId], references: [id], onDelete: SetNull)
+
+  @@index([userId, completedAt])
+  @@index([userId, completed])
+}
+
+// ═══════════════════════════════════════════════════════════
+// 🏆 BADGES & ACHIEVEMENTS
+// ═══════════════════════════════════════════════════════════
+
+model Badge {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String
+  iconPath    String
+  category    String   // streak, focus, social, milestone
+  requirement String   // Description du critère (ex: "100 completions")
+  createdAt   DateTime @default(now())
+
+  // Relations
+  userBadges UserBadge[]
+
+  @@index([category])
+}
+
+model UserBadge {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  badgeId    Int
+  unlockedAt DateTime @default(now())
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([userId, unlockedAt])
+}
+
+// ═══════════════════════════════════════════════════════════
+// 📋 ENUMS
+// ═══════════════════════════════════════════════════════════
 
 enum HabitType {
   GOOD
@@ -87,4 +211,11 @@ enum HabitType {
 enum Frequency {
   DAILY
   WEEKLY
+}
+
+enum Rarity {
+  COMMON
+  RARE
+  EPIC
+  LEGENDARY
 }
