@@ -196,11 +196,11 @@ export default function Dashboard() {
                 return (
                   <div
                     key={habit.id}
-                    className={`habit-card transition-all duration-300 ${
+                    className={`habit-card transition-all duration-300 rounded-2xl ${
                       isCompleted ? 'bg-success/10 border-success/40' : 'bg-card'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between rounded-2xl">
                       <div className="flex items-center space-x-4 flex-1">
                         <div className="text-4xl">{habit.emoji}</div>
                         <div className="flex-1">
