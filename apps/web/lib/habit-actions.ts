@@ -158,3 +158,168 @@ export async function toggleHabit(habitId: number, date: Date) {
     return { success: false, error: 'Erreur lors de la mise à jour de l\'habitude.' }
   }
 }
+
+// ═══════════════════════════════════════════════════════════
+// 🔙 SYSTÈME DE RATTRAPAGE (US6)
+// ═══════════════════════════════════════════════════════════
+
+export async function getMissedHabitsFromYesterday() {
+  const session = await auth()
+  
+  if (!session?.user?.id) {
+    return []
+  }
+
+  const userId = parseInt(session.user.id)
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  const yesterdayDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate())
+
+  try {
+    const habits = await prisma.habit.findMany({
+      where: {
+        userId,
+        isActive: true,
+        frequency: 'DAILY' // Seules les habitudes quotidiennes peuvent être rattrapées
+      },
+      include: {
+        habitLogs: {
+          where: {
+            date: yesterdayDate
+          }
+        }
+      }
+    })
+    
+    // Filtrer les habitudes non complétées hier
+    return habits.filter(habit => 
+      habit.habitLogs.length === 0 || !habit.habitLogs[0].completed
+    ).map(habit => ({
+      id: habit.id,
+      name: habit.name,
+      emoji: habit.emoji,
+      type: habit.type,
+      frequency: habit.frequency
+    }))
+  } catch (error) {
+    console.error('Error fetching missed habits:', error)
+    return []
+  }
+}
+
+export async function catchUpHabit(habitId: number) {
+  const session = await auth()
+  
+  if (!session?.user?.id) {
+    redirect('/auth/signin')
+  }
+
+  const userId = parseInt(session.user.id)
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  const yesterdayDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate())
+
+  try {
+    // Vérifier si déjà rattrapé
+    const existingLog = await prisma.habitLog.findUnique({
+      where: {
+        habitId_date: {
+          habitId,
+          date: yesterdayDate
+        }
+      }
+    })
+
+    if (existingLog) {
+      // Mettre à jour l'existant
+      await prisma.habitLog.update({
+        where: {
+          habitId_date: {
+            habitId,
+            date: yesterdayDate
+          }
+        },
+        data: {
+          completed: true
+        }
+      })
+    } else {
+      // Créer un nouveau log de rattrapage
+      await prisma.habitLog.create({
+        data: {
+          habitId,
+          userId,
+          date: yesterdayDate,
+          completed: true
+        }
+      })
+    }
+
+    revalidatePath('/dashboard')
+    return { success: true }
+  } catch (error) {
+    console.error('Error catching up habit:', error)
+    return { success: false, error: 'Erreur lors du rattrapage de l\'habitude.' }
+  }
+}
+
+export async function checkIfShouldShowCatchUp() {
+  const session = await auth()
+  
+  if (!session?.user?.id) {
+    return false
+  }
+
+  const userId = parseInt(session.user.id)
+
+  try {
+    // Vérifier si l'utilisateur a un lastLoginDate
+    const userProgress = await prisma.userProgress.findUnique({
+      where: { userId }
+    })
+
+    const today = new Date()
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+
+    // Si pas de lastLoginDate ou si c'était hier ou avant
+    if (!userProgress?.lastLoginDate) {
+      // Créer ou mettre à jour le UserProgress
+      await prisma.userProgress.upsert({
+        where: { userId },
+        update: { lastLoginDate: todayDate },
+        create: {
+          userId,
+          lastLoginDate: todayDate,
+          totalXp: 0,
+          currentLevel: 1,
+          bestStreak: 0
+        }
+      })
+      return true // Premier login, vérifier les habitudes manquées
+    }
+
+    const lastLogin = new Date(userProgress.lastLoginDate)
+    const lastLoginDate = new Date(lastLogin.getFullYear(), lastLogin.getMonth(), lastLogin.getDate())
+
+    // Si le dernier login était hier, proposer le rattrapage
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+    const yesterdayDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate())
+
+    if (lastLoginDate.getTime() < todayDate.getTime()) {
+      // Mettre à jour le lastLoginDate
+      await prisma.userProgress.update({
+        where: { userId },
+        data: { lastLoginDate: todayDate }
+      })
+
+      // Montrer le popup uniquement si c'était hier
+      return lastLoginDate.getTime() === yesterdayDate.getTime()
+    }
+
+    return false
+  } catch (error) {
+    console.error('Error checking catch-up status:', error)
+    return false
+  }
+}

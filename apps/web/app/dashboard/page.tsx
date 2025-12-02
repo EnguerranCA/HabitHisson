@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { signOut } from 'next-auth/react'
 import CreateHabitForm from '@/components/create-habit-form'
-import { getUserHabits, toggleHabit } from '@/lib/habit-actions'
+import CatchUpModal from '@/components/catch-up-modal'
+import { getUserHabits, toggleHabit, checkIfShouldShowCatchUp, getMissedHabitsFromYesterday } from '@/lib/habit-actions'
 
 interface HabitLog {
   id: number
@@ -22,26 +23,46 @@ interface Habit {
   completedToday?: boolean
 }
 
+interface MissedHabit {
+  id: number
+  name: string
+  emoji: string
+  type: 'GOOD' | 'BAD'
+}
+
 export default function Dashboard() {
   const [habits, setHabits] = useState<Habit[]>([])
+  const [missedHabits, setMissedHabits] = useState<MissedHabit[]>([])
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [showCatchUpModal, setShowCatchUpModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const [togglingHabit, setTogglingHabit] = useState<number | null>(null)
   const today = new Date()
 
   useEffect(() => {
-    async function loadHabits() {
+    async function initialize() {
       try {
+        // Charger les habitudes
         const userHabits = await getUserHabits()
         setHabits(userHabits)
+
+        // Vérifier s'il faut afficher le popup de rattrapage
+        const shouldShow = await checkIfShouldShowCatchUp()
+        if (shouldShow) {
+          const missed = await getMissedHabitsFromYesterday()
+          if (missed.length > 0) {
+            setMissedHabits(missed)
+            setShowCatchUpModal(true)
+          }
+        }
       } catch (error) {
-        console.error('Erreur lors du chargement des habitudes:', error)
+        console.error('Erreur lors du chargement:', error)
       } finally {
         setLoading(false)
       }
     }
     
-    loadHabits()
+    initialize()
   }, [])
 
   const handleToggleHabit = async (habitId: number) => {
@@ -252,6 +273,17 @@ export default function Dashboard() {
 
         {showCreateForm && (
           <CreateHabitForm onClose={() => setShowCreateForm(false)} />
+        )}
+
+        {showCatchUpModal && missedHabits.length > 0 && (
+          <CatchUpModal
+            missedHabits={missedHabits}
+            onClose={() => {
+              setShowCatchUpModal(false)
+              // Recharger les habitudes après le rattrapage
+              loadHabits()
+            }}
+          />
         )}
       </div>
     </div>
