@@ -73,19 +73,35 @@ export async function getUserHabits() {
     return []
   }
 
+  const userId = parseInt(session.user.id)
+  const today = new Date()
+  const dateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+
   try {
     const habits = await prisma.habit.findMany({
       where: {
-        userId: parseInt(session.user.id),
+        userId,
         isActive: true
+      },
+      include: {
+        habitLogs: {
+          where: {
+            date: dateOnly
+          }
+        }
       },
       orderBy: {
         createdAt: 'asc'
       }
     })
     
-    return habits
+    // Ajouter le statut de complétion pour aujourd'hui
+    return habits.map(habit => ({
+      ...habit,
+      completedToday: habit.habitLogs[0]?.completed ?? false
+    }))
   } catch (error) {
+    console.error('Error fetching habits:', error)
     return []
   }
 }
