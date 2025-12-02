@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { getHabitLogsForMonth, HabitLogWithHabit } from '@/lib/calendar-actions'
+import { ChevronLeft, ChevronRight, TrendingUp, Award, Flame } from 'lucide-react'
+import { getHabitLogsForMonth, HabitLogWithHabit, getHabitStreaks, HabitStreak, getStreakHistory } from '@/lib/calendar-actions'
 import { MobileNav } from '@/components/mobile-nav'
 
 export default function CalendarPage() {
@@ -10,7 +10,10 @@ export default function CalendarPage() {
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear())
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1)
   const [habitLogs, setHabitLogs] = useState<HabitLogWithHabit[]>([])
+  const [streaks, setStreaks] = useState<HabitStreak[]>([])
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
+  const [selectedHabitForGraph, setSelectedHabitForGraph] = useState<number | null>(null)
+  const [streakHistory, setStreakHistory] = useState<Array<{ date: string; streak: number }>>([])
   const [loading, setLoading] = useState(true)
 
   // Charger les données du mois
@@ -18,8 +21,12 @@ export default function CalendarPage() {
     async function loadMonthData() {
       setLoading(true)
       try {
-        const logs = await getHabitLogsForMonth(selectedYear, selectedMonth)
+        const [logs, streaksData] = await Promise.all([
+          getHabitLogsForMonth(selectedYear, selectedMonth),
+          getHabitStreaks(),
+        ])
         setHabitLogs(logs)
+        setStreaks(streaksData)
       } catch (error) {
         console.error('Erreur chargement calendrier:', error)
       } finally {
@@ -98,6 +105,17 @@ export default function CalendarPage() {
     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
   ]
 
+  // Charger l'historique du streak pour une habitude
+  const loadStreakHistory = async (habitId: number) => {
+    try {
+      const history = await getStreakHistory(habitId)
+      setStreakHistory(history)
+      setSelectedHabitForGraph(habitId)
+    } catch (error) {
+      console.error('Erreur chargement historique streak:', error)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background pb-20 px-4 pt-6">
       {/* En-tête avec navigation mois */}
@@ -130,6 +148,137 @@ export default function CalendarPage() {
         </div>
       ) : (
         <>
+          {/* Section Streaks (US5) */}
+          <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+              <Flame className="h-6 w-6 text-orange-500" />
+              🔥 Vos Streaks
+            </h2>
+            
+            {streaks.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">
+                Commencez à accomplir vos habitudes pour voir vos streaks !
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {streaks.map((streak) => (
+                  <div
+                    key={streak.habitId}
+                    className="border-2 rounded-lg p-3 transition-all hover:shadow-md cursor-pointer"
+                    style={{ borderColor: streak.streakColor }}
+                    onClick={() => loadStreakHistory(streak.habitId)}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">{streak.emoji}</span>
+                        <span className="font-semibold text-foreground">{streak.habitName}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-sm font-medium" style={{ color: streak.streakColor }}>
+                        <Flame className="h-4 w-4" />
+                        {streak.currentStreak} jours
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between text-sm text-gray-600">
+                      <div className="flex items-center gap-1">
+                        <Award className="h-4 w-4 text-yellow-500" />
+                        <span>Record: {streak.bestStreak} jours</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <TrendingUp className="h-4 w-4" style={{ color: streak.streakColor }} />
+                        <span>{streak.totalCompletions} complétions</span>
+                      </div>
+                    </div>
+                    
+                    {/* Barre de progression vers centurion */}
+                    {streak.totalCompletions < 100 && (
+                      <div className="mt-2">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="h-2 rounded-full transition-all duration-500"
+                            style={{
+                              width: `${streak.totalCompletions}%`,
+                              backgroundColor: streak.streakColor,
+                            }}
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1 text-center">
+                          {100 - streak.totalCompletions} complétions avant le badge Centurion 🏆
+                        </p>
+                      </div>
+                    )}
+                    
+                    {streak.totalCompletions >= 100 && (
+                      <div className="mt-2 text-center">
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">
+                          🏆 CENTURION 🏆
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Graphique d'évolution du streak */}
+          {selectedHabitForGraph !== null && streakHistory.length > 0 && (
+            <div className="bg-white rounded-lg shadow-md p-4 mb-6 animate-in slide-in-from-top duration-300">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-foreground">
+                  📈 Évolution du Streak (30 derniers jours)
+                </h3>
+                <button
+                  onClick={() => {
+                    setSelectedHabitForGraph(null)
+                    setStreakHistory([])
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              {/* Graphique en barres simple */}
+              <div className="relative h-40 flex items-end gap-1">
+                {streakHistory.map((point, index) => {
+                  const maxStreak = Math.max(...streakHistory.map((p) => p.streak), 1)
+                  const heightPercent = (point.streak / maxStreak) * 100
+                  
+                  return (
+                    <div
+                      key={index}
+                      className="flex-1 group relative"
+                      style={{ height: '100%' }}
+                    >
+                      <div
+                        className="w-full bg-gradient-to-t from-orange-500 to-orange-300 rounded-t transition-all hover:opacity-80"
+                        style={{
+                          height: `${heightPercent}%`,
+                          minHeight: point.streak > 0 ? '4px' : '0px',
+                        }}
+                      />
+                      
+                      {/* Tooltip au survol */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-10">
+                        <div className="bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap">
+                          {new Date(point.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
+                          <br />
+                          Streak: {point.streak}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              
+              <div className="flex justify-between text-xs text-gray-500 mt-2">
+                <span>{streakHistory[0] ? new Date(streakHistory[0].date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : ''}</span>
+                <span>Aujourd&apos;hui</span>
+              </div>
+            </div>
+          )}
+
           {/* Calendrier */}
           <div className="bg-white rounded-lg shadow-md p-4 mb-6">
             {/* Jours de la semaine */}
