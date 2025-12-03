@@ -53,7 +53,7 @@ export function HedgehogDisplay({ xp, showXPBar = true, size = 'medium', onXPGai
   }
 
   return (
-    <div className="relative flex flex-col items-center">
+    <div className="relative flex flex-col items-center gap-8">
       {/* Popup de gain d'XP */}
       <AnimatePresence>
         {showXPPopup && (
@@ -68,9 +68,20 @@ export function HedgehogDisplay({ xp, showXPBar = true, size = 'medium', onXPGai
         )}
       </AnimatePresence>
 
+
+      {/* Badge de niveau */}
+      <motion.div
+        className="mt-2 bg-gradient-to-r from-orange-400 to-orange-600 text-white font-bold px-4 py-2 rounded-full shadow-md relative z-10"
+        whileHover={{ scale: 1.05 }}
+      >
+        <span className="text-lg">Niveau {currentLevel}</span>
+        <span className="text-xs ml-2 opacity-80 top-20">({getStageLabel(stage)})</span>
+      </motion.div>
+
+      
       {/* Conteneur du hérisson */}
       <motion.div
-        className={`relative ${sizeClasses[size]} z-0`}
+        className={`relative ${sizeClasses[size]} z-0 -top-10`}
         animate={isEvolving ? {
           opacity: [1, 0, 1, 0, 1, 0, 1],
           scale: [1, 1.1, 1, 1.1, 1, 1.1, 1],
@@ -96,15 +107,6 @@ export function HedgehogDisplay({ xp, showXPBar = true, size = 'medium', onXPGai
         </AnimatePresence>
       </motion.div>
 
-      {/* Badge de niveau */}
-      <motion.div
-        className="mt-2 bg-gradient-to-r from-orange-400 to-orange-600 text-white font-bold px-4 py-2 rounded-full shadow-md relative z-10"
-        whileHover={{ scale: 1.05 }}
-      >
-        <span className="text-lg">Niveau {currentLevel}</span>
-        <span className="text-xs ml-2 opacity-80">({getStageLabel(stage)})</span>
-      </motion.div>
-
       {/* Barre de progression glands */}
       {showXPBar && (
         <div className="w-full max-w-xs mt-3 relative z-10">
@@ -118,7 +120,7 @@ export function HedgehogDisplay({ xp, showXPBar = true, size = 'medium', onXPGai
               {xpRequiredForNextLevel}
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+          <div className="w-full bg-gray-200 rounded-full h-5 overflow-hidden">
             <motion.div
               className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full"
               initial={{ width: 0 }}

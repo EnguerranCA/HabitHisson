@@ -195,7 +195,7 @@ export default function Dashboard() {
           {/* 🦔 Le fond derrière le hérisson */}
           {/* ═══════════════════════════════════════════════════════════ */}
           <div 
-            className="relative rounded-3xl p-8 mb-6 overflow-hidden shadow-lg border-4 border-orange-200"
+            className="relative rounded-3xl p-4 mb-6 overflow-hidden shadow-lg border-4 border-orange-200"
             style={{
               background: 'linear-gradient(to bottom, #87CEEB 0%, #B0E0E6 40%, #90EE90 60%, #7CFC00 100%)',
             }}
@@ -227,7 +227,7 @@ export default function Dashboard() {
 
 
             {/* Hérisson au centre */}
-            <div className="relative z-10 flex justify-center pt-4" id="hedgehog-container">
+            <div className="relative z-10 flex justify-center" id="hedgehog-container">
               <HedgehogDisplay xp={userXP} showXPBar={true} size="medium" />
             </div>
           </div>
