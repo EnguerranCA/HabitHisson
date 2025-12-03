@@ -14,7 +14,7 @@
 export function calculateLevelFromXP(xp: number): number {
   // Résolution de l'équation : level² × 100 = xp
   // level = √(xp / 100)
-  const level = Math.floor(Math.sqrt(xp / 100))
+  const level = Math.floor(Math.sqrt(Math.max(0, xp) / 100))
   return Math.max(1, level) // Minimum niveau 1
 }
 
@@ -34,17 +34,18 @@ export function getLevelProgress(xp: number): {
   xpRequiredForNextLevel: number
   progressPercent: number
 } {
-  const currentLevel = calculateLevelFromXP(xp)
+  const safeXP = Math.max(0, xp) // Protection contre XP négatif
+  const currentLevel = calculateLevelFromXP(safeXP)
   const xpForCurrentLevel = getXPForLevel(currentLevel)
   const xpForNextLevel = getXPForLevel(currentLevel + 1)
-  const xpInCurrentLevel = xp - xpForCurrentLevel
+  const xpInCurrentLevel = Math.max(0, safeXP - xpForCurrentLevel)
   const xpRequiredForNextLevel = xpForNextLevel - xpForCurrentLevel
 
   return {
     currentLevel,
     xpInCurrentLevel,
     xpRequiredForNextLevel,
-    progressPercent: Math.floor((xpInCurrentLevel / xpRequiredForNextLevel) * 100),
+    progressPercent: Math.min(100, Math.max(0, Math.floor((xpInCurrentLevel / xpRequiredForNextLevel) * 100))),
   }
 }
 

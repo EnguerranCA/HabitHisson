@@ -192,26 +192,42 @@ export default function Dashboard() {
           </div>
 
           {/* ═══════════════════════════════════════════════════════════ */}
-          {/* 🦔 HÉRISSON AVEC FOND PRAIRIE (US9 & US10) */}
+          {/* 🦔 Le fond derrière le hérisson */}
           {/* ═══════════════════════════════════════════════════════════ */}
           <div 
-            className="relative bg-gradient-to-b from-green-100 via-green-50 to-yellow-50 rounded-3xl p-8 mb-6 overflow-hidden shadow-lg border-2 border-green-200"
+            className="relative rounded-3xl p-8 mb-6 overflow-hidden shadow-lg border-4 border-orange-200"
             style={{
-              backgroundImage: 'linear-gradient(to bottom, #dcfce7 0%, #f0fdf4 50%, #fefce8 100%)',
+              background: 'linear-gradient(to bottom, #87CEEB 0%, #B0E0E6 40%, #90EE90 60%, #7CFC00 100%)',
             }}
           >
-            {/* Décorations prairie */}
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-green-300 to-transparent"></div>
-              <div className="absolute bottom-4 left-10 text-4xl">🌼</div>
-              <div className="absolute bottom-8 right-20 text-3xl">🌸</div>
-              <div className="absolute bottom-6 left-1/3 text-2xl">🌻</div>
-              <div className="absolute top-10 right-10 text-5xl opacity-30">☁️</div>
-              <div className="absolute top-16 left-20 text-4xl opacity-30">☁️</div>
+            {/* Soleil */}
+            <div className="absolute top-6 right-8 w-16 h-16 bg-yellow-300 rounded-full shadow-lg"></div>
+            
+            {/* Nuages flat */}
+            <div className="absolute top-12 left-12">
+              <div className="flex items-center">
+                <div className="w-12 h-8 bg-white rounded-full"></div>
+                <div className="w-16 h-10 bg-white rounded-full -ml-4"></div>
+                <div className="w-12 h-8 bg-white rounded-full -ml-4"></div>
+              </div>
+            </div>
+            
+            <div className="absolute top-20 right-24">
+              <div className="flex items-center opacity-80">
+                <div className="w-10 h-7 bg-white rounded-full"></div>
+                <div className="w-14 h-9 bg-white rounded-full -ml-3"></div>
+                <div className="w-10 h-7 bg-white rounded-full -ml-3"></div>
+              </div>
             </div>
 
+            {/* Collines au loin */}
+            <div className="absolute bottom-0 left-0 right-0 h-32 bg-green-400 rounded-t-full transform scale-x-150"></div>
+
+
+
+
             {/* Hérisson au centre */}
-            <div className="relative z-10 flex justify-center" id="hedgehog-container">
+            <div className="relative z-10 flex justify-center pt-4" id="hedgehog-container">
               <HedgehogDisplay xp={userXP} showXPBar={true} size="medium" />
             </div>
           </div>
@@ -239,7 +255,7 @@ export default function Dashboard() {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold text-foreground">
-                📋 Mes habitudes du jour
+                📋 Mes habitudes
               </h2>
               <button
                 onClick={() => setShowCreateForm(true)}

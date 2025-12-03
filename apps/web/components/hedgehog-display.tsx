@@ -120,9 +120,9 @@ export function HedgehogDisplay({ xp, showXPBar = true, size = 'medium', onXPGai
               transition={{ duration: 0.5, ease: 'easeOut' }}
             />
           </div>
-          <p className="text-xs text-center text-gray-500 mt-1">
+          {/* <p className="text-xs text-center text-gray-500 mt-1">
             {progressPercent}% vers le niveau {currentLevel + 1}
-          </p>
+          </p> */}
         </div>
       )}
 
