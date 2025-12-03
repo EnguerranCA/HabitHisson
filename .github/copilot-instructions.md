@@ -24,9 +24,9 @@
 
 ### US3. En tant qu'utilisateur, je veux cocher mes habitudes chaque jour/semaine pour suivre ma progression.
 **Critères d'acceptation :**
-- [ ] Une liste des habitudes du jour/semaine s'affiche sur le dashboard
-- [ ] Chaque habitude a une case à cocher cliquable
-- [ ] Le clic sur une case marque l'habitude comme accomplie pour la période
+- [x] Une liste des habitudes du jour/semaine s'affiche sur le dashboard
+- [x] Chaque habitude a une case à cocher cliquable
+- [x] Le clic sur une case marque l'habitude comme accomplie pour la période
 - [x] L'état "coché" est stocké en base de données
 - [x] L'interface se met à jour immédiatement après le clic
 - [x] Les habitudes déjà cochées restent cochées au rechargement de la page

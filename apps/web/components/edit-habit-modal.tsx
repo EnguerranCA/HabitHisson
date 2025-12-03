@@ -113,7 +113,6 @@ export default function EditHabitModal({ habit, onClose }: EditHabitModalProps) 
                     : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                 }`}
               >
-                <div className="text-2xl mb-1">✅</div>
                 <div className="font-semibold">Bonne habitude</div>
                 <div className="text-xs text-gray-500 mt-1">À développer</div>
               </button>
@@ -126,7 +125,6 @@ export default function EditHabitModal({ habit, onClose }: EditHabitModalProps) 
                     : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                 }`}
               >
-                <div className="text-2xl mb-1">❌</div>
                 <div className="font-semibold">Mauvaise habitude</div>
                 <div className="text-xs text-gray-500 mt-1">À éviter</div>
               </button>
@@ -148,7 +146,6 @@ export default function EditHabitModal({ habit, onClose }: EditHabitModalProps) 
                     : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                 }`}
               >
-                <div className="text-2xl mb-1">📅</div>
                 <div className="font-semibold">Quotidienne</div>
                 <div className="text-xs text-gray-500 mt-1">Chaque jour</div>
               </button>
@@ -161,7 +158,6 @@ export default function EditHabitModal({ habit, onClose }: EditHabitModalProps) 
                     : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                 }`}
               >
-                <div className="text-2xl mb-1">📆</div>
                 <div className="font-semibold">Hebdomadaire</div>
                 <div className="text-xs text-gray-500 mt-1">Chaque semaine</div>
               </button>
@@ -180,9 +176,9 @@ export default function EditHabitModal({ habit, onClose }: EditHabitModalProps) 
               type="button"
               onClick={handleDelete}
               disabled={isDeleting}
-              className="flex-1 bg-red-500 text-white py-3 rounded-xl font-semibold hover:bg-red-600 disabled:bg-red-300 transition-colors shadow-md"
+              className="cursor-pointer flex-1 bg-red-500 text-white py-3 rounded-xl font-semibold hover:bg-red-600 disabled:bg-red-300 transition-colors shadow-md"
             >
-              {isDeleting ? 'Suppression...' : '🗑️ Supprimer'}
+              {isDeleting ? 'Suppression...' : 'Supprimer'}
             </button>
             <SubmitButton />
           </div>
@@ -199,9 +195,9 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="flex-1 bg-orange-500 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 disabled:bg-orange-300 transition-colors shadow-md"
+      className="flex-1 bg-orange-500 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 disabled:bg-orange-300 transition-colors shadow-md cursor-pointer"
     >
-      {pending ? 'Modification...' : '✅ Modifier'}
+      {pending ? 'Modification...' : 'Modifier'}
     </button>
   )
 }

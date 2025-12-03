@@ -89,7 +89,6 @@ export default function CreateHabitForm({ onClose }: { onClose: () => void }) {
                     : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                 }`}
               >
-                <div className="text-2xl mb-1">✅</div>
                 <div className="font-semibold">Bonne habitude</div>
                 <div className="text-xs text-gray-500 mt-1">À développer</div>
               </button>
@@ -102,7 +101,6 @@ export default function CreateHabitForm({ onClose }: { onClose: () => void }) {
                     : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                 }`}
               >
-                <div className="text-2xl mb-1">❌</div>
                 <div className="font-semibold">Mauvaise habitude</div>
                 <div className="text-xs text-gray-500 mt-1">À éviter</div>
               </button>
@@ -128,7 +126,6 @@ export default function CreateHabitForm({ onClose }: { onClose: () => void }) {
                     : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                 }`}
               >
-                <div className="text-2xl mb-1">📅</div>
                 <div className="font-semibold">Quotidienne</div>
                 <div className="text-xs text-gray-500 mt-1">Chaque jour</div>
               </button>
@@ -141,7 +138,6 @@ export default function CreateHabitForm({ onClose }: { onClose: () => void }) {
                     : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                 }`}
               >
-                <div className="text-2xl mb-1">📆</div>
                 <div className="font-semibold">Hebdomadaire</div>
                 <div className="text-xs text-gray-500 mt-1">Chaque semaine</div>
               </button>
@@ -164,7 +160,7 @@ export default function CreateHabitForm({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+              className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors cursor-pointer"
             >
               Annuler
             </button>
@@ -183,9 +179,9 @@ function CreateHabitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-semibold py-3 px-4 rounded-xl transition-colors duration-200 shadow-md"
+      className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-semibold py-3 px-4 rounded-xl transition-colors duration-200 shadow-md cursor-pointer"
     >
-      {pending ? 'Création...' : '✨ Créer'}
+      {pending ? 'Création...' : 'Créer'}
     </button>
   )
 }

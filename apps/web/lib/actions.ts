@@ -84,16 +84,28 @@ export async function createUser(prevState: FormState, formData: FormData): Prom
 
 export async function authenticate(prevState: string | undefined, formData: FormData) {
   try {
-    await signIn('credentials', {
+    const result = await signIn('credentials', {
       email: formData.get('email'),
       password: formData.get('password'),
       redirect: false,
     })
-  } catch (error) {
-    if ((error as Error).message.includes('CredentialsSignin')) {
+    
+    // Si signIn renvoie une erreur (pas de throw)
+    if (result?.error) {
       return 'Email ou mot de passe incorrect.'
     }
-    throw error
+  } catch (error: unknown) {
+    // NextAuth v5 lance une erreur CredentialsSignin
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    if (errorMessage.includes('CredentialsSignin') || errorMessage.includes('NEXT_REDIRECT')) {
+      // Si c'est un redirect, c'est que la connexion a réussi
+      if (errorMessage.includes('NEXT_REDIRECT')) {
+        redirect('/dashboard')
+      }
+      return 'Email ou mot de passe incorrect.'
+    }
+    console.error('Auth error:', error)
+    return 'Une erreur est survenue lors de la connexion.'
   }
   redirect('/dashboard')
 }
