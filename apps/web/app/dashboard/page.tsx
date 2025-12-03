@@ -5,7 +5,9 @@ import { signOut } from 'next-auth/react'
 import CreateHabitForm from '@/components/create-habit-form'
 import CatchUpModal from '@/components/catch-up-modal'
 import { MobileNav } from '@/components/mobile-nav'
+import { HedgehogDisplay } from '@/components/hedgehog-display'
 import { getUserHabits, toggleHabit, checkIfShouldShowCatchUp, getMissedHabitsFromYesterday } from '@/lib/habit-actions'
+import { getUserXP } from '@/lib/user-actions'
 
 interface HabitLog {
   id: number
@@ -38,6 +40,7 @@ export default function Dashboard() {
   const [showCatchUpModal, setShowCatchUpModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const [togglingHabit, setTogglingHabit] = useState<number | null>(null)
+  const [userXP, setUserXP] = useState(0)
   const today = new Date()
 
   // Fonction de chargement des habitudes
@@ -57,8 +60,15 @@ export default function Dashboard() {
   useEffect(() => {
     async function initialize() {
       try {
-        // Charger les habitudes
-        await loadHabits()
+        // Charger les habitudes et l'XP en parallèle
+        const [userHabits, xpData] = await Promise.all([
+          getUserHabits(),
+          getUserXP(),
+        ])
+        
+        setHabits(userHabits)
+        setUserXP(xpData.xp)
+        setLoading(false)
 
         // Vérifier s'il faut afficher le popup de rattrapage (seulement au premier chargement)
         const shouldShow = await checkIfShouldShowCatchUp()
@@ -71,6 +81,7 @@ export default function Dashboard() {
         }
       } catch (error) {
         console.error('Erreur lors du chargement:', error)
+        setLoading(false)
       }
     }
     
@@ -102,6 +113,28 @@ export default function Dashboard() {
           )
         )
         console.error('Erreur:', result.error)
+      } else if (result.xpGained && result.xpGained > 0) {
+        // ═══════════════════════════════════════════════════════════
+        // 🌰 ANIMATION DES GLANDS (US10)
+        // ═══════════════════════════════════════════════════════════
+        
+        // Déclencher l'animation des glands vers le hérisson
+        const habitElement = document.getElementById(`habit-${habitId}`)
+        const hedgehogElement = document.getElementById('hedgehog-container')
+        
+        if (habitElement && hedgehogElement) {
+          // TODO: Déclencher l'animation avec useAcornAnimation
+          // Pour l'instant, on met simplement à jour l'XP
+        }
+        
+        // Mettre à jour l'XP localement
+        setUserXP(prev => prev + result.xpGained!)
+        
+        // Recharger l'XP depuis le serveur après un délai (pour s'assurer de la synchro)
+        setTimeout(async () => {
+          const xpData = await getUserXP()
+          setUserXP(xpData.xp)
+        }, 1500)
       }
     } catch (error) {
       // Annuler la mise à jour optimiste
@@ -156,6 +189,31 @@ export default function Dashboard() {
             >
               Se déconnecter
             </button>
+          </div>
+
+          {/* ═══════════════════════════════════════════════════════════ */}
+          {/* 🦔 HÉRISSON AVEC FOND PRAIRIE (US9 & US10) */}
+          {/* ═══════════════════════════════════════════════════════════ */}
+          <div 
+            className="relative bg-gradient-to-b from-green-100 via-green-50 to-yellow-50 rounded-3xl p-8 mb-6 overflow-hidden shadow-lg border-2 border-green-200"
+            style={{
+              backgroundImage: 'linear-gradient(to bottom, #dcfce7 0%, #f0fdf4 50%, #fefce8 100%)',
+            }}
+          >
+            {/* Décorations prairie */}
+            <div className="absolute inset-0 opacity-20">
+              <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-green-300 to-transparent"></div>
+              <div className="absolute bottom-4 left-10 text-4xl">🌼</div>
+              <div className="absolute bottom-8 right-20 text-3xl">🌸</div>
+              <div className="absolute bottom-6 left-1/3 text-2xl">🌻</div>
+              <div className="absolute top-10 right-10 text-5xl opacity-30">☁️</div>
+              <div className="absolute top-16 left-20 text-4xl opacity-30">☁️</div>
+            </div>
+
+            {/* Hérisson au centre */}
+            <div className="relative z-10 flex justify-center" id="hedgehog-container">
+              <HedgehogDisplay xp={userXP} showXPBar={true} size="medium" />
+            </div>
           </div>
 
           {/* Statistiques du jour */}
@@ -220,6 +278,7 @@ export default function Dashboard() {
                 return (
                   <div
                     key={habit.id}
+                    id={`habit-${habit.id}`}
                     className={`habit-card transition-all duration-300 rounded-2xl ${
                       isCompleted ? 'bg-success/10 border-success/40' : 'bg-card'
                     }`}

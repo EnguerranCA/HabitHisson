@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { prisma } from '@repo/db'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import { calculateXPGain, calculateLevelFromXP } from '@/lib/xp-utils'
 
 const CreateHabit = z.object({
   name: z.string().min(1, 'Le nom est requis').max(50, 'Le nom ne peut pas dépasser 50 caractères'),
@@ -117,6 +118,16 @@ export async function toggleHabit(habitId: number, date: Date) {
   const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
 
   try {
+    // Récupérer l'habitude pour connaître sa fréquence
+    const habit = await prisma.habit.findUnique({
+      where: { id: habitId },
+      select: { frequency: true }
+    })
+
+    if (!habit) {
+      return { success: false, error: 'Habitude non trouvée.' }
+    }
+
     // Vérifier si le log existe déjà
     const existingLog = await prisma.habitLog.findUnique({
       where: {
@@ -126,6 +137,9 @@ export async function toggleHabit(habitId: number, date: Date) {
         }
       }
     })
+
+    const wasCompletedBefore = existingLog?.completed ?? false
+    let willBeCompleted = !wasCompletedBefore
 
     if (existingLog) {
       // Toggle l'état existant
@@ -140,8 +154,9 @@ export async function toggleHabit(habitId: number, date: Date) {
           completed: !existingLog.completed
         }
       })
+      willBeCompleted = !existingLog.completed
     } else {
-      // Créer un nouveau log
+      // Créer un nouveau log (toujours completed=true au premier clic)
       await prisma.habitLog.create({
         data: {
           habitId,
@@ -150,11 +165,75 @@ export async function toggleHabit(habitId: number, date: Date) {
           completed: true
         }
       })
+      willBeCompleted = true
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 🌰 GAIN D'XP (US10)
+    // ═══════════════════════════════════════════════════════════
+    let xpGained = 0
+    
+    if (willBeCompleted && !wasCompletedBefore) {
+      // L'habitude vient d'être cochée → gagner de l'XP
+      xpGained = calculateXPGain(habit.frequency as 'DAILY' | 'WEEKLY')
+      
+      // Mettre à jour l'XP de l'utilisateur
+      const user = await prisma.user.update({
+        where: { id: userId },
+        data: {
+          xp: {
+            increment: xpGained
+          }
+        },
+        select: { xp: true }
+      })
+
+      // Calculer le nouveau niveau
+      const newLevel = calculateLevelFromXP(user.xp)
+      
+      // Mettre à jour le niveau dans la table User
+      await prisma.user.update({
+        where: { id: userId },
+        data: { level: newLevel }
+      })
+    } else if (!willBeCompleted && wasCompletedBefore) {
+      // L'habitude vient d'être décochée → retirer l'XP
+      const xpToRemove = calculateXPGain(habit.frequency as 'DAILY' | 'WEEKLY')
+      xpGained = -xpToRemove
+      
+      // Récupérer l'XP actuel pour éviter qu'il devienne négatif
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { xp: true }
+      })
+
+      if (!currentUser) {
+        return { success: false, error: 'Utilisateur non trouvé.' }
+      }
+
+      // Calculer le nouvel XP (minimum 0)
+      const newXP = Math.max(0, currentUser.xp - xpToRemove)
+      
+      const user = await prisma.user.update({
+        where: { id: userId },
+        data: {
+          xp: newXP
+        },
+        select: { xp: true }
+      })
+
+      const newLevel = calculateLevelFromXP(user.xp)
+      
+      await prisma.user.update({
+        where: { id: userId },
+        data: { level: newLevel }
+      })
     }
 
     revalidatePath('/dashboard')
-    return { success: true }
+    return { success: true, xpGained }
   } catch (error) {
+    console.error('Error in toggleHabit:', error)
     return { success: false, error: 'Erreur lors de la mise à jour de l\'habitude.' }
   }
 }

@@ -53,20 +53,11 @@
 
 ### US6. En tant qu'utilisateur, je veux pouvoir rattraper les oublis du jour précédent au démarrage d'un nouveau jour.
 **Critères d'acceptation :**
-- [ ] À la première connexion du jour, popup de rattrapage si habitudes manquées
-- [ ] Liste des habitudes non cochées de la veille
-- [ ] Possibilité de cocher rétroactivement (jusqu'à 24h)
-- [ ] Option "Ignorer" pour accepter l'échec
-- [ ] Le rattrapage maintient le streak en cours
-
-### US7. En tant que développeur, je veux un mode debug pour avancer artificiellement le jour et tester le comportement temporel.
-**Critères d'acceptation :**
-- [ ] Variable d'environnement DEBUG_MODE active le mode développeur
-- [ ] C'est un menu flottant opur changer le jour
-- [ ] Boutons "+1 jour", "+1 semaine" pour avancer le temps
-- [ ] Toute la logique temporelle utilise cette date simulée
-- [ ] Possibilité de reset à la date réelle
-- [ ] Mode visible uniquement en développement (pas en production)
+- [X] À la première connexion du jour, popup de rattrapage si habitudes manquées
+- [X] Liste des habitudes non cochées de la veille
+- [X] Possibilité de cocher rétroactivement (jusqu'à 24h)
+- [X] Option "Ignorer" pour accepter l'échec
+- [X] Le rattrapage maintient le streak en cours
 
 
 ---
@@ -92,12 +83,8 @@
 
 ### US10. En tant qu'utilisateur, je veux nourrir mon hérisson quand je réussis mes tâches pour renforcer la sensation de récompense.
 **Critères d'acceptation :**
-- [ ] Bouton "Nourrir" apparaît après chaque habitude accomplie
-- [ ] Animation de nourriture tombant vers le hérisson
-- [ ] Jauge de bonheur/satiété du hérisson
-- [ ] Différents types de nourriture selon le type d'habitude
-- [ ] Le hérisson réagit visuellement (expressions, mouvements)
-- [ ] Système de "faim" qui décroît avec le temps
+- [ ] Bouton des glands partent de l'habitude pour aller au hérisson quand on coche une habitude
+- [ ] Animation de nourriture vers le hérisson
 
 ### US11. En tant qu'utilisateur, je veux débloquer des éléments de décor à certains niveaux pour personnaliser l'environnement.
 **Critères d'acceptation :**
