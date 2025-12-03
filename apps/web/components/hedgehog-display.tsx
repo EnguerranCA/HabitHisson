@@ -133,7 +133,7 @@ export function HedgehogDisplay({ xp, showXPBar = true, size = 'medium', onXPGai
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute -bottom-16 bg-white border-4 border-yellow-400 rounded-lg px-6 py-3 shadow-xl z-10"
+            className="absolute top-32 bg-white border-4 border-yellow-400 rounded-lg px-6 py-3 shadow-xl z-10"
           >
             <p className="text-lg font-bold text-center text-yellow-600">
               ✨ Ton hérisson grandit ! ✨

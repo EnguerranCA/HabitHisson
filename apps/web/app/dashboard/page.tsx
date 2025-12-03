@@ -166,7 +166,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-24">
       <div className="container mx-auto p-6 max-w-4xl">
         <header className="mb-8">
           <div className="flex items-center justify-between mb-6">
@@ -216,27 +216,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Statistiques du jour */}
-          {habits.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-card border-2 border-border rounded-2xl p-4 shadow-sm">
-                <div className="text-muted-foreground text-sm font-medium mb-1">Total habitudes</div>
-                <div className="text-3xl font-bold text-foreground">{habits.length}</div>
-              </div>
-              <div className="bg-success/10 border-2 border-success/40 rounded-2xl p-4 shadow-sm">
-                <div className="text-success text-sm font-medium mb-1">✓ Accomplies</div>
-                <div className="text-3xl font-bold text-success">
-                  {habits.filter(h => h.completedToday).length}
-                </div>
-              </div>
-              <div className="bg-warning/10 border-2 border-warning/40 rounded-2xl p-4 shadow-sm">
-                <div className="text-warning-foreground text-sm font-medium mb-1">○ Restantes</div>
-                <div className="text-3xl font-bold text-warning-foreground">
-                  {habits.filter(h => !h.completedToday).length}
-                </div>
-              </div>
-            </div>
-          )}
         </header>
 
         {habits.length === 0 ? (
@@ -332,6 +311,29 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+                  {/* Statistiques du jour */}
+          {/* {habits.length > 0 && (
+            <div className="grid grid-cols-1 grid-cols-3 gap-4 m-6">
+              <div className="bg-card border-2 border-border rounded-2xl p-4 shadow-sm">
+                <div className="text-muted-foreground text-sm font-medium mb-1">Total habitudes</div>
+                <div className="text-3xl font-bold text-foreground">{habits.length}</div>
+              </div>
+              <div className="bg-success/10 border-2 border-success/40 rounded-2xl p-4 shadow-sm">
+                <div className="text-success text-sm font-medium mb-1">Accomplies</div>
+                <div className="text-3xl font-bold text-success">
+                  {habits.filter(h => h.completedToday).length}
+                </div>
+              </div>
+              <div className="bg-warning/10 border-2 border-warning/40 rounded-2xl p-4 shadow-sm">
+                <div className="text-warning-foreground text-sm font-medium mb-1">Restantes</div>
+                <div className="text-3xl font-bold text-warning-foreground">
+                  {habits.filter(h => !h.completedToday).length}
+                </div>
+              </div>
+            </div>
+          )} */}
+
 
         {showCreateForm && (
           <CreateHabitForm onClose={() => setShowCreateForm(false)} />

@@ -117,7 +117,7 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-28">
       <div className="container mx-auto px-4 pt-6 max-w-4xl">
         {/* En-tête avec navigation mois */}
         <div className="flex items-center justify-between mb-6">
