@@ -118,10 +118,13 @@ export async function toggleHabit(habitId: number, date: Date) {
   const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
 
   try {
-    // Récupérer l'habitude pour connaître sa fréquence
+    // Récupérer l'habitude pour connaître sa fréquence et son type
     const habit = await prisma.habit.findUnique({
       where: { id: habitId },
-      select: { frequency: true }
+      select: { 
+        frequency: true,
+        type: true
+      }
     })
 
     if (!habit) {
@@ -169,21 +172,43 @@ export async function toggleHabit(habitId: number, date: Date) {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // 🌰 GAIN D'XP (US10)
+    // 🌰 GAIN/PERTE D'XP (US10)
     // ═══════════════════════════════════════════════════════════
+    // LOGIQUE:
+    // - BONNE habitude cochée = +XP, décochée = -XP
+    // - MAUVAISE habitude cochée = -XP (tu as fait une mauvaise action), décochée = +XP (tu as résisté)
     let xpGained = 0
+    const baseXP = calculateXPGain(habit.frequency as 'DAILY' | 'WEEKLY')
+    const isGoodHabit = habit.type === 'GOOD'
     
     if (willBeCompleted && !wasCompletedBefore) {
-      // L'habitude vient d'être cochée → gagner de l'XP
-      xpGained = calculateXPGain(habit.frequency as 'DAILY' | 'WEEKLY')
+      // L'habitude vient d'être cochée
+      if (isGoodHabit) {
+        // BONNE habitude cochée → +XP
+        xpGained = baseXP
+      } else {
+        // MAUVAISE habitude cochée → -XP (pénalité)
+        xpGained = -baseXP
+      }
+      
+      // Récupérer l'XP actuel pour éviter qu'il devienne négatif
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { xp: true }
+      })
+
+      if (!currentUser) {
+        return { success: false, error: 'Utilisateur non trouvé.' }
+      }
+
+      // Calculer le nouvel XP (minimum 0)
+      const newXP = Math.max(0, currentUser.xp + xpGained)
       
       // Mettre à jour l'XP de l'utilisateur
       const user = await prisma.user.update({
         where: { id: userId },
         data: {
-          xp: {
-            increment: xpGained
-          }
+          xp: newXP
         },
         select: { xp: true }
       })
@@ -197,9 +222,14 @@ export async function toggleHabit(habitId: number, date: Date) {
         data: { level: newLevel }
       })
     } else if (!willBeCompleted && wasCompletedBefore) {
-      // L'habitude vient d'être décochée → retirer l'XP
-      const xpToRemove = calculateXPGain(habit.frequency as 'DAILY' | 'WEEKLY')
-      xpGained = -xpToRemove
+      // L'habitude vient d'être décochée
+      if (isGoodHabit) {
+        // BONNE habitude décochée → -XP (retrait du bonus)
+        xpGained = -baseXP
+      } else {
+        // MAUVAISE habitude décochée → +XP (récompense pour avoir résisté)
+        xpGained = baseXP
+      }
       
       // Récupérer l'XP actuel pour éviter qu'il devienne négatif
       const currentUser = await prisma.user.findUnique({
@@ -212,7 +242,7 @@ export async function toggleHabit(habitId: number, date: Date) {
       }
 
       // Calculer le nouvel XP (minimum 0)
-      const newXP = Math.max(0, currentUser.xp - xpToRemove)
+      const newXP = Math.max(0, currentUser.xp + xpGained)
       
       const user = await prisma.user.update({
         where: { id: userId },

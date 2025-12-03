@@ -89,7 +89,7 @@ export function HedgehogDisplay({ xp, showXPBar = true, size = 'medium', onXPGai
               src={imagePath}
               alt={`Hérisson ${getStageLabel(stage)}`}
               fill
-              className="object-contain"
+              className="object-contain min-h-60 -z-10"
               priority
             />
           </motion.div>
@@ -105,12 +105,18 @@ export function HedgehogDisplay({ xp, showXPBar = true, size = 'medium', onXPGai
         <span className="text-xs ml-2 opacity-80">({getStageLabel(stage)})</span>
       </motion.div>
 
-      {/* Barre de progression XP */}
+      {/* Barre de progression glands */}
       {showXPBar && (
         <div className="w-full max-w-xs mt-3">
-          <div className="flex justify-between text-sm text-gray-600 mb-1">
-            <span>{xpInCurrentLevel} XP</span>
-            <span>{xpRequiredForNextLevel} XP</span>
+          <div className="flex justify-between text-sm text-gray-600 mb-1 items-center">
+            <span className="flex items-center gap-1">
+              <Image src="/icons/gland.webp" alt="gland" width={14} height={14} />
+              {xpInCurrentLevel}
+            </span>
+            <span className="flex items-center gap-1">
+              <Image src="/icons/gland.webp" alt="gland" width={14} height={14} />
+              {xpRequiredForNextLevel}
+            </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
             <motion.div

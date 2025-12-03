@@ -36,7 +36,7 @@ export default function CatchUpModal({ missedHabits, onClose }: CatchUpModalProp
   const allCaughtUp = missedHabits.every(h => caughtUpHabits.has(h.id))
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-card rounded-3xl shadow-2xl p-8 w-full max-w-md border-4 border-primary/30 animate-pulse-soft">
         <div className="text-center mb-6">
           <div className="text-6xl mb-4 animate-hedgehog-bounce">🦔</div>

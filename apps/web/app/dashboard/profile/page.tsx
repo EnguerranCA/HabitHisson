@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { getUserProfile, updateUserProfile, type UserProfile } from '@/lib/profile-actions'
 import { User, Mail, Trophy, Calendar, TrendingUp } from 'lucide-react'
 import { MobileNav } from '@/components/mobile-nav'
+import Image from 'next/image'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -137,9 +138,12 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <TrendingUp className="h-6 w-6 text-green-500" />
-              <span className="font-medium">Glands (XP)</span>
+              <span className="font-medium">Glands</span>
             </div>
-            <span className="text-2xl font-bold text-green-600">{profile.xp} 🌰</span>
+            <span className="text-2xl font-bold text-green-600 flex items-center gap-2">
+              <Image src="/icons/gland.webp" alt="gland" width={20} height={20} />
+              {profile.xp}
+            </span>
           </div>
 
           <div className="flex items-center justify-between">

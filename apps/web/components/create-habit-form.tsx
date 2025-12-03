@@ -5,7 +5,7 @@ import { useFormStatus } from 'react-dom'
 import { useState } from 'react'
 import { createHabit, HabitFormState } from '@/lib/habit-actions'
 
-const emojis = ['✅', '📚', '🏃‍♂️', '💧', '🥗', '💪', '😴', '📱', '🚬', '🍺', '🍕', '📺', '🎮', '💻', '📖', '🧘‍♀️', '🚿', '🦷', '☕', '🎨']
+const emojis = ['✅', '📚', '🏃‍♂️', '💧', '🥗', '💪', '😴', '📱', '🚬', '🍺']
 
 export default function CreateHabitForm({ onClose }: { onClose: () => void }) {
   const initialState: HabitFormState = { message: '', errors: {} }
@@ -13,7 +13,7 @@ export default function CreateHabitForm({ onClose }: { onClose: () => void }) {
   const [selectedEmoji, setSelectedEmoji] = useState('✅')
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md border-2 border-orange-200">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Nouvelle habitude</h2>

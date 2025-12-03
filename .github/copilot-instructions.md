@@ -278,8 +278,7 @@ HabitHisson/
 │       ├── components/         # Composants React réutilisables
 │       │   ├── catch-up-modal.tsx      # Modal de rattrapage US6
 │       │   ├── create-habit-form.tsx   # Formulaire création habitude
-│       │   └── debug-time-menu.tsx     # Menu debug temporel US7
-│       └── lib/                # Logique métier et utilitaires
+│       └── lib/                # Logique et utilitaires
 │           ├── actions.ts              # Actions serveur utilisateurs
 │           ├── auth.ts                 # Configuration NextAuth
 │           ├── habit-actions.ts        # Actions serveur habitudes
