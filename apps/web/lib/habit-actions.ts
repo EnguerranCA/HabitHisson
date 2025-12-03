@@ -193,7 +193,8 @@ export async function getMissedHabitsFromYesterday() {
     
     // Filtrer les habitudes non complétées hier
     return habits.filter(habit => 
-      habit.habitLogs.length === 0 || !habit.habitLogs[0].completed
+      habit.habitLogs.length === 0 || 
+      (habit.habitLogs[0] && !habit.habitLogs[0].completed)
     ).map(habit => ({
       id: habit.id,
       name: habit.name,

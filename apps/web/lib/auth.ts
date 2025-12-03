@@ -1,10 +1,10 @@
-import NextAuth from "next-auth"
+import NextAuth, { type NextAuthResult } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
 import { prismaAuth } from "@repo/db"
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const authResult = NextAuth({
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -59,5 +59,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session
     },
+    authorized({ auth, request }) {
+      const { nextUrl } = request
+      const isLoggedIn = !!auth
+
+      const isPublicRoute = nextUrl.pathname.startsWith('/auth') || nextUrl.pathname === '/'
+      const isProtectedRoute = nextUrl.pathname.startsWith('/dashboard')
+
+      // Bloquer l'accès aux routes protégées si non connecté
+      if (isProtectedRoute && !isLoggedIn) {
+        return false
+      }
+
+      return true
+    },
   },
 })
+
+export const handlers: NextAuthResult['handlers'] = authResult.handlers
+export const auth: NextAuthResult['auth'] = authResult.auth
+export const signIn: NextAuthResult['signIn'] = authResult.signIn
+export const signOut: NextAuthResult['signOut'] = authResult.signOut

@@ -184,10 +184,9 @@ export async function getHabitStreaks(): Promise<HabitStreak[]> {
     
     // Calcul du streak actuel
     let currentStreak = 0
-    let checkDate = new Date(today)
+    const checkDate = new Date(today)
     
     for (let i = 0; i < 365; i++) {
-      const dateStr = checkDate.toISOString().split('T')[0]
       const hasLog = completedLogs.some((log) => {
         const logDate = new Date(log.date)
         logDate.setHours(0, 0, 0, 0)
