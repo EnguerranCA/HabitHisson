@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, TrendingUp, Award, Flame } from 'lucide-react'
-import { getHabitLogsForMonth, HabitLogWithHabit, getHabitStreaks, HabitStreak, getStreakHistory } from '@/lib/calendar-actions'
+import { getHabitLogsForMonth, HabitLogWithHabit, getHabitStreaks, HabitStreak } from '@/lib/calendar-actions'
 import { MobileNav } from '@/components/mobile-nav'
 
 export default function CalendarPage() {
@@ -12,8 +12,6 @@ export default function CalendarPage() {
   const [habitLogs, setHabitLogs] = useState<HabitLogWithHabit[]>([])
   const [streaks, setStreaks] = useState<HabitStreak[]>([])
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
-  const [selectedHabitForGraph, setSelectedHabitForGraph] = useState<number | null>(null)
-  const [streakHistory, setStreakHistory] = useState<Array<{ date: string; streak: number }>>([])
   const [loading, setLoading] = useState(true)
 
   // Charger les données du mois
@@ -105,17 +103,6 @@ export default function CalendarPage() {
     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
   ]
 
-  // Charger l'historique du streak pour une habitude
-  const loadStreakHistory = async (habitId: number) => {
-    try {
-      const history = await getStreakHistory(habitId)
-      setStreakHistory(history)
-      setSelectedHabitForGraph(habitId)
-    } catch (error) {
-      console.error('Erreur chargement historique streak:', error)
-    }
-  }
-
   return (
     <div className="min-h-screen bg-background pb-28">
       <div className="container mx-auto px-4 pt-6 max-w-4xl">
@@ -165,9 +152,8 @@ export default function CalendarPage() {
                 {streaks.map((streak) => (
                   <div
                     key={streak.habitId}
-                    className="border-2 rounded-lg p-3 transition-all hover:shadow-md cursor-pointer"
+                    className="border-2 rounded-lg p-3 transition-all hover:shadow-md"
                     style={{ borderColor: streak.streakColor }}
-                    onClick={() => loadStreakHistory(streak.habitId)}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
@@ -204,15 +190,15 @@ export default function CalendarPage() {
                           />
                         </div>
                         <p className="text-xs text-gray-500 mt-1 text-center">
-                          {100 - streak.totalCompletions} complétions avant le badge Centurion 🏆
+                          {60 - streak.totalCompletions} complétions avant le badge Superhisson 🏆
                         </p>
                       </div>
                     )}
                     
-                    {streak.totalCompletions >= 100 && (
+                    {streak.totalCompletions >= 60 && (
                       <div className="mt-2 text-center">
                         <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">
-                          🏆 CENTURION 🏆
+                          🏆 Superhisson 🏆
                         </span>
                       </div>
                     )}
@@ -221,64 +207,6 @@ export default function CalendarPage() {
               </div>
             )}
           </div>
-
-          {/* Graphique d'évolution du streak */}
-          {selectedHabitForGraph !== null && streakHistory.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md p-4 mb-6 animate-in slide-in-from-top duration-300">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-foreground">
-                  📈 Évolution du Streak (30 derniers jours)
-                </h3>
-                <button
-                  onClick={() => {
-                    setSelectedHabitForGraph(null)
-                    setStreakHistory([])
-                  }}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </button>
-              </div>
-              
-              {/* Graphique en barres simple */}
-              <div className="relative h-40 flex items-end gap-1">
-                {streakHistory.map((point, index) => {
-                  const maxStreak = Math.max(...streakHistory.map((p) => p.streak), 1)
-                  const heightPercent = (point.streak / maxStreak) * 100
-                  
-                  return (
-                    <div
-                      key={index}
-                      className="flex-1 group relative"
-                      style={{ height: '100%' }}
-                    >
-                      <div
-                        className="w-full bg-gradient-to-t from-orange-500 to-orange-300 rounded-t transition-all hover:opacity-80"
-                        style={{
-                          height: `${heightPercent}%`,
-                          minHeight: point.streak > 0 ? '4px' : '0px',
-                        }}
-                      />
-                      
-                      {/* Tooltip au survol */}
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-10">
-                        <div className="bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap">
-                          {new Date(point.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
-                          <br />
-                          Streak: {point.streak}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-              
-              <div className="flex justify-between text-xs text-gray-500 mt-2">
-                <span>{streakHistory[0] ? new Date(streakHistory[0].date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : ''}</span>
-                <span>Aujourd&apos;hui</span>
-              </div>
-            </div>
-          )}
 
           {/* Calendrier */}
           <div className="bg-white rounded-lg shadow-md p-4 mb-6">

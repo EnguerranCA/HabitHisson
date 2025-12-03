@@ -66,25 +66,30 @@
 
 ### US8. En tant qu'utilisateur, je veux gagner de l'XP en accomplissant mes habitudes pour faire progresser mon niveau.
 **Critères d'acceptation :**
-- [ ] Chaque habitude accomplie rapporte des points d'XP 
-- [ ] Barre de progression XP visible sur le profil utilisateur
-- [ ] Passage au niveau suivant avec notification visuelle
-- [ ] Formule de progression exponentielle (niveau n = n² × 100 XP)
+- [X] Chaque habitude accomplie rapporte des glands (10 quotidien, 50 hebdomadaire)
+- [X] Barre de progression glands visible avec icônes sur le profil et le hérisson
+- [X] Passage au niveau suivant avec notification visuelle (animation Pokémon)
+- [X] Formule de progression exponentielle (niveau n = n² × 100 glands)
+- [X] Mauvaises habitudes : cocher = perte de glands, décocher = gain de glands
 - [ ] Bonus XP pour les streaks (×1.5 à partir de 7 jours)
 - [ ] Historique des gains d'XP consultable
 
 ### US9. En tant qu'utilisateur, je veux voir mon hérisson grandir à chaque niveau pour visualiser ma progression.
 **Critères d'acceptation :**
-- [ ] 5 stades de croissance du hérisson (bébé → adulte)
-- [ ] Changement visuel automatique à chaque passage de niveau
-- [ ] Animation de transition entre les stades
-- [ ] Sauvegarde de l'état actuel du hérisson
-- [ ] Possibility de voir l'évolution passée dans une galerie
+- [X] 5 stades de croissance du hérisson (Baby/Child/Teen/Adult/Elder aux niveaux 1/5/10/15/20+)
+- [X] Changement visuel automatique à chaque passage de niveau
+- [X] Animation de transition entre les stades (style Pokémon avec clignotement)
+- [X] Sauvegarde de l'état actuel du hérisson (niveau stocké en BDD)
+- [X] Affichage du hérisson dans une prairie avec ciel, nuages, collines (flat design)
+- [ ] Galerie pour voir l'évolution passée
 
 ### US10. En tant qu'utilisateur, je veux nourrir mon hérisson quand je réussis mes tâches pour renforcer la sensation de récompense.
 **Critères d'acceptation :**
-- [ ] Bouton des glands partent de l'habitude pour aller au hérisson quand on coche une habitude
-- [ ] Animation de nourriture vers le hérisson
+- [X] Système de glands fonctionnel : gain automatique à chaque habitude cochée
+- [X] Barre de progression avec icônes gland.webp
+- [X] Protection contre XP négatif (minimum 0)
+- [ ] Animation des glands partant de l'habitude vers le hérisson (composant créé, non connecté)
+- [ ] Réaction visuelle du hérisson quand il reçoit des glands
 
 ### US11. En tant qu'utilisateur, je veux débloquer des éléments de décor à certains niveaux pour personnaliser l'environnement.
 **Critères d'acceptation :**
@@ -198,6 +203,19 @@
 
 - **eslint** / **eslint-config-next** : Linting
 - **@types/** : Typages pour TypeScript
+- **framer-motion** : Animations (hérisson, glands, évolution)
+
+---
+
+## 🎨 Améliorations UI récentes
+
+### Design & Expérience utilisateur
+- ✅ **Modales avec flou** : `backdrop-blur-sm` sur create-habit-form et catch-up-modal
+- ✅ **Prairie flat design** : Ciel gradient, nuages, collines, hérisson agrandi
+- ✅ **Z-index structurés** : Hérisson (z-0), badges/barres (z-10), messages évolution (z-40), popups (z-50)
+- ✅ **Terminologie glands** : Remplacement de "XP" par icônes gland.webp dans tout le front
+- ✅ **Protection XP négatif** : Math.max(0, xp) dans tous les calculs
+- ✅ **Responsive mobile** : pb-24/pb-28 pour éviter le chevauchement avec la navigation
 
 ---
 
@@ -233,11 +251,22 @@ Les actions serveur (CRUD utilisateurs, authentification) sont dans `app/lib/act
 - **Profil utilisateur** : Statistiques complètes (niveau, XP, streaks, complétions)
 
 ### ✅ **PHASE 2 - GAMIFICATION (PARTIEL)**
-- **Hérisson interactif** : Affichage avec score dynamique, environnement 3D
-- **Animation des glands** : Trajectoire fluide et linéaire vers le compteur
-- **Bouton nourrir** : Interaction avec animation des particules
-- **Graphiques** : Tracking des performances avec barres de progression
-- **Images optimisées** : Composant Next.js Image pour gland.webp
+- **Système XP/Glands complet** : 
+  - Gain : 10 glands (quotidien), 50 glands (hebdomadaire)
+  - Mauvaises habitudes : inversion logique (cocher = -glands, décocher = +glands)
+  - Protection contre valeurs négatives avec Math.max(0, xp)
+  - Calcul automatique du niveau : √(glands/100)
+- **Hérisson évolutif** : 
+  - 5 stades visuels (herisson-1.png à herisson-5.png)
+  - Animation Pokémon lors de l'évolution (clignotement + scale)
+  - Affichage dans prairie flat design (ciel, nuages, collines)
+  - Taille large (w-64 h-64) avec z-index correct
+- **Interface utilisateur** :
+  - Barre progression avec icônes gland.webp
+  - Modales avec backdrop-blur-sm
+  - Badge niveau orange avec stade
+  - Suppression des statistiques du jour (UI allégée)
+- **Composant AcornAnimation** : Créé mais non connecté aux toggles
 
 ### ⏳ **EN COURS DE DÉVELOPPEMENT**
 - Système XP et niveaux
@@ -554,10 +583,23 @@ npx prisma generate
 requiredXP = N² × 100
 
 // Exemples
-Level 1 → 2: 100 XP
+Level 1 → 2: 100 XP (glands)
 Level 2 → 3: 400 XP
 Level 3 → 4: 900 XP
 Level 10: 10,000 XP
+```
+
+**Logique des gains/pertes :**
+```typescript
+// BONNE habitude
+- Cocher = +10 glands (quotidien) ou +50 glands (hebdomadaire)
+- Décocher = -10/-50 glands
+
+// MAUVAISE habitude
+- Cocher = -10/-50 glands (pénalité pour mauvaise action)
+- Décocher = +10/+50 glands (récompense pour résistance)
+
+// Protection : Math.max(0, xp) - jamais négatif
 ```
 
 #### **Bonus streaks**

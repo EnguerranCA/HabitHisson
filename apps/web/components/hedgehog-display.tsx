@@ -61,7 +61,7 @@ export function HedgehogDisplay({ xp, showXPBar = true, size = 'medium', onXPGai
             initial={{ opacity: 0, y: 0, scale: 0.5 }}
             animate={{ opacity: 1, y: -30, scale: 1 }}
             exit={{ opacity: 0, y: -50 }}
-            className="absolute top-0 z-20 bg-yellow-400 text-yellow-900 font-bold px-3 py-1 rounded-full shadow-lg"
+            className="absolute top-0 z-50 bg-yellow-400 text-yellow-900 font-bold px-3 py-1 rounded-full shadow-lg"
           >
             +{xpGainAmount} 🌰
           </motion.div>
@@ -70,7 +70,7 @@ export function HedgehogDisplay({ xp, showXPBar = true, size = 'medium', onXPGai
 
       {/* Conteneur du hérisson */}
       <motion.div
-        className={`relative ${sizeClasses[size]}`}
+        className={`relative ${sizeClasses[size]} z-0`}
         animate={isEvolving ? {
           opacity: [1, 0, 1, 0, 1, 0, 1],
           scale: [1, 1.1, 1, 1.1, 1, 1.1, 1],
@@ -89,7 +89,7 @@ export function HedgehogDisplay({ xp, showXPBar = true, size = 'medium', onXPGai
               src={imagePath}
               alt={`Hérisson ${getStageLabel(stage)}`}
               fill
-              className="object-contain min-h-60 -z-10"
+              className="object-contain min-h-60"
               priority
             />
           </motion.div>
@@ -98,7 +98,7 @@ export function HedgehogDisplay({ xp, showXPBar = true, size = 'medium', onXPGai
 
       {/* Badge de niveau */}
       <motion.div
-        className="mt-2 bg-gradient-to-r from-orange-400 to-orange-600 text-white font-bold px-4 py-2 rounded-full shadow-md"
+        className="mt-2 bg-gradient-to-r from-orange-400 to-orange-600 text-white font-bold px-4 py-2 rounded-full shadow-md relative z-10"
         whileHover={{ scale: 1.05 }}
       >
         <span className="text-lg">Niveau {currentLevel}</span>
@@ -107,7 +107,7 @@ export function HedgehogDisplay({ xp, showXPBar = true, size = 'medium', onXPGai
 
       {/* Barre de progression glands */}
       {showXPBar && (
-        <div className="w-full max-w-xs mt-3">
+        <div className="w-full max-w-xs mt-3 relative z-10">
           <div className="flex justify-between text-sm text-gray-600 mb-1 items-center">
             <span className="flex items-center gap-1">
               <Image src="/icons/gland.webp" alt="gland" width={14} height={14} />
@@ -133,13 +133,13 @@ export function HedgehogDisplay({ xp, showXPBar = true, size = 'medium', onXPGai
       )}
 
       {/* Message d'évolution */}
-      <AnimatePresence>
+      {/* <AnimatePresence>
         {isEvolving && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute top-32 bg-white border-4 border-yellow-400 rounded-lg px-6 py-3 shadow-xl z-10"
+            className="absolute top-32 bg-white border-4 border-yellow-400 rounded-lg px-6 py-3 shadow-xl z-40"
           >
             <p className="text-lg font-bold text-center text-yellow-600">
               ✨ Ton hérisson grandit ! ✨
@@ -149,7 +149,7 @@ export function HedgehogDisplay({ xp, showXPBar = true, size = 'medium', onXPGai
             </p>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence> */}
     </div>
   )
 }

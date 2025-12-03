@@ -113,7 +113,7 @@ export default function Dashboard() {
           )
         )
         console.error('Erreur:', result.error)
-      } else if (result.xpGained && result.xpGained > 0) {
+      } else if (result.xpGained !== undefined && result.xpGained !== 0) {
         // ═══════════════════════════════════════════════════════════
         // 🌰 ANIMATION DES GLANDS (US10)
         // ═══════════════════════════════════════════════════════════
@@ -127,8 +127,8 @@ export default function Dashboard() {
           // Pour l'instant, on met simplement à jour l'XP
         }
         
-        // Mettre à jour l'XP localement
-        setUserXP(prev => prev + result.xpGained!)
+        // Mettre à jour l'XP localement (peut être positif ou négatif)
+        setUserXP(prev => Math.max(0, prev + result.xpGained!))
         
         // Recharger l'XP depuis le serveur après un délai (pour s'assurer de la synchro)
         setTimeout(async () => {
@@ -246,7 +246,7 @@ export default function Dashboard() {
             </p>
             <button
               onClick={() => setShowCreateForm(true)}
-              className="btn-primary text-lg"
+              className="bg-primary rounded-3xl text-lg text-white px-6 py-3 font-semibold hover:scale-105 transition-transform shadow-md cursor-pointer"
             >
               ✨ Créer ma première habitude
             </button>
