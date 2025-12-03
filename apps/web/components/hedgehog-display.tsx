@@ -122,7 +122,7 @@ export function HedgehogDisplay({ xp, showXPBar = true, size = 'medium', onXPGai
           </div>
           <div className="w-full bg-gray-200 rounded-full h-5 overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full"
+              className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${progressPercent}%` }}
               transition={{ duration: 0.5, ease: 'easeOut' }}

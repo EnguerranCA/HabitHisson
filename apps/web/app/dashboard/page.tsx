@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { signOut } from 'next-auth/react'
 import CreateHabitForm from '@/components/create-habit-form'
+import EditHabitModal from '@/components/edit-habit-modal'
 import CatchUpModal from '@/components/catch-up-modal'
 import { MobileNav } from '@/components/mobile-nav'
 import { HedgehogDisplay } from '@/components/hedgehog-display'
@@ -37,6 +38,8 @@ export default function Dashboard() {
   const [habits, setHabits] = useState<Habit[]>([])
   const [missedHabits, setMissedHabits] = useState<MissedHabit[]>([])
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null)
   const [showCatchUpModal, setShowCatchUpModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const [togglingHabit, setTogglingHabit] = useState<number | null>(null)
@@ -185,7 +188,7 @@ export default function Dashboard() {
             </div>
             <button 
               onClick={() => signOut()}
-              className="bg-destructive text-destructive-foreground px-4 py-2 rounded-xl transition-all hover:scale-105 font-semibold shadow-md"
+              className="bg-destructive px-4 py-2 rounded-xl transition-all hover:scale-105 font-semibold shadow-md text-white"
             >
               Se déconnecter
             </button>
@@ -195,7 +198,7 @@ export default function Dashboard() {
           {/* 🦔 Le fond derrière le hérisson */}
           {/* ═══════════════════════════════════════════════════════════ */}
           <div 
-            className="relative rounded-3xl p-4 mb-6 overflow-hidden shadow-lg border-4 border-orange-200"
+            className="relative rounded-3xl p-4 mb-6 overflow-hidden shadow-lg border-4 "
             style={{
               background: 'linear-gradient(to bottom, #87CEEB 0%, #B0E0E6 40%, #90EE90 60%, #7CFC00 100%)',
             }}
@@ -302,24 +305,39 @@ export default function Dashboard() {
                         </div>
                       </div>
                       
-                      <button
-                        onClick={() => handleToggleHabit(habit.id)}
-                        disabled={isToggling}
-                        className={`relative w-14 h-14 rounded-2xl border-3 transition-all duration-300 flex items-center justify-center ${
-                          isCompleted
-                            ? 'bg-success border-success shadow-lg scale-110'
-                            : 'bg-input border-border hover:border-primary hover:scale-105'
-                        } ${isToggling ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                        title={isCompleted ? 'Marquer comme non fait' : 'Marquer comme fait'}
-                      >
-                        {isToggling ? (
-                          <div className="animate-spin text-2xl">⏳</div>
-                        ) : isCompleted ? (
-                          <span className="text-3xl font-bold text-white">✓</span>
-                        ) : (
-                          <span className="text-2xl text-muted-foreground">○</span>
-                        )}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {/* Bouton édition */}
+                        <button
+                          onClick={() => {
+                            setEditingHabit(habit)
+                            setShowEditModal(true)
+                          }}
+                          className="w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center"
+                          title="Modifier l'habitude"
+                        >
+                          ✏️
+                        </button>
+                        
+                        {/* Bouton toggle */}
+                        <button
+                          onClick={() => handleToggleHabit(habit.id)}
+                          disabled={isToggling}
+                          className={`relative w-14 h-14 rounded-2xl border-3 transition-all duration-300 flex items-center justify-center ${
+                            isCompleted
+                              ? 'bg-success border-success shadow-lg scale-110'
+                              : 'bg-input border-border hover:border-primary hover:scale-105'
+                          } ${isToggling ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                          title={isCompleted ? 'Marquer comme non fait' : 'Marquer comme fait'}
+                        >
+                          {isToggling ? (
+                            <div className="animate-spin text-2xl">⏳</div>
+                          ) : isCompleted ? (
+                            <span className="text-3xl font-bold text-white">✓</span>
+                          ) : (
+                            <span className="text-2xl text-muted-foreground"> </span>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )
@@ -353,6 +371,16 @@ export default function Dashboard() {
 
         {showCreateForm && (
           <CreateHabitForm onClose={() => setShowCreateForm(false)} />
+        )}
+
+        {showEditModal && editingHabit && (
+          <EditHabitModal
+            habit={editingHabit}
+            onClose={() => {
+              setShowEditModal(false)
+              setEditingHabit(null)
+            }}
+          />
         )}
 
         {showCatchUpModal && missedHabits.length > 0 && (

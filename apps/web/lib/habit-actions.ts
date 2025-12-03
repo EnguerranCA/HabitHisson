@@ -67,6 +67,85 @@ export async function createHabit(prevState: HabitFormState, formData: FormData)
   redirect('/dashboard')
 }
 
+// ═══════════════════════════════════════════════════════════
+// 📝 UPDATE HABIT
+// ═══════════════════════════════════════════════════════════
+export async function updateHabit(habitId: number, prevState: HabitFormState, formData: FormData): Promise<HabitFormState> {
+  const session = await auth()
+  
+  if (!session?.user?.id) {
+    redirect('/auth/signin')
+  }
+
+  const validatedFields = CreateHabit.safeParse({
+    name: formData.get('name'),
+    emoji: formData.get('emoji'),
+    type: formData.get('type'),
+    frequency: formData.get('frequency'),
+  })
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Champs invalides. Échec de la modification de l\'habitude.',
+    }
+  }
+
+  const { name, emoji, type, frequency } = validatedFields.data
+
+  try {
+    await prisma.habit.update({
+      where: {
+        id: habitId,
+        userId: parseInt(session.user.id), // Sécurité : vérifier que c'est bien l'habitude de l'utilisateur
+      },
+      data: {
+        name,
+        emoji,
+        type: type as 'GOOD' | 'BAD',
+        frequency: frequency as 'DAILY' | 'WEEKLY',
+      }
+    })
+  } catch (error) {
+    return {
+      message: 'Erreur de base de données: Échec de la modification de l\'habitude.',
+    }
+  }
+
+  revalidatePath('/dashboard')
+  redirect('/dashboard')
+}
+
+// ═══════════════════════════════════════════════════════════
+// 🗑️ DELETE HABIT
+// ═══════════════════════════════════════════════════════════
+export async function deleteHabit(habitId: number) {
+  const session = await auth()
+  
+  if (!session?.user?.id) {
+    redirect('/auth/signin')
+  }
+
+  try {
+    // Soft delete: marquer comme inactif au lieu de supprimer
+    await prisma.habit.update({
+      where: {
+        id: habitId,
+        userId: parseInt(session.user.id), // Sécurité
+      },
+      data: {
+        isActive: false
+      }
+    })
+
+    revalidatePath('/dashboard')
+    return { success: true }
+  } catch (error) {
+    console.error('Erreur suppression habitude:', error)
+    return { success: false, error: 'Erreur lors de la suppression.' }
+  }
+}
+
 export async function getUserHabits() {
   const session = await auth()
   
