@@ -25,13 +25,13 @@ export function WeeklyBarChart({ data, title, showXP = false }: BarChartProps) {
 
   const getBarColor = (value: number) => {
     if (showXP) {
-      return 'from-amber-400 to-amber-600'
+      return '#f59e0b' // amber
     }
-    if (value >= 80) return 'from-green-400 to-green-600'
-    if (value >= 60) return 'from-lime-400 to-lime-600'
-    if (value >= 40) return 'from-yellow-400 to-yellow-600'
-    if (value >= 20) return 'from-orange-400 to-orange-600'
-    return 'from-red-400 to-red-600'
+    if (value >= 80) return '#10b981' // green
+    if (value >= 60) return '#84cc16' // lime
+    if (value >= 40) return '#eab308' // yellow
+    if (value >= 20) return '#f97316' // orange
+    return '#ef4444' // red
   }
 
   const formatWeekLabel = (weekStart: string) => {
@@ -58,16 +58,17 @@ export function WeeklyBarChart({ data, title, showXP = false }: BarChartProps) {
         </div>
 
         {/* Barres */}
-        <div className="absolute inset-0 flex items-end justify-around pl-8 pb-6">
+        <div className="absolute inset-0 flex items-end justify-around pl-8 pb-6 gap-2">
           {data.map((week, index) => {
             const value = showXP ? week.xpEarned : week.successRate
-            const height = (value / maxValue) * 100
+            // Calculer la hauteur en pixels (le container fait 256px de haut avec h-64)
+            const containerHeight = 256 - 24 // moins le padding bottom
+            const heightPx = Math.max((value / maxValue) * containerHeight, 8)
 
             return (
               <div
                 key={week.weekStart}
-                className="flex flex-col items-center relative"
-                style={{ width: `${90 / data.length}%` }}
+                className="flex flex-col items-center relative flex-1"
                 onMouseEnter={() => {
                   setHoveredIndex(index)
                   setTooltipData(week)
@@ -78,11 +79,14 @@ export function WeeklyBarChart({ data, title, showXP = false }: BarChartProps) {
                 }}
               >
                 <motion.div
-                  className={`w-full max-w-8 rounded-t-lg bg-gradient-to-t ${getBarColor(week.successRate)} cursor-pointer relative`}
+                  className="w-full rounded-t-lg relative"
+                  style={{ 
+                    background: `linear-gradient(to top, ${getBarColor(week.successRate)}, ${getBarColor(week.successRate)}dd)`,
+                  }}
                   initial={{ height: 0 }}
-                  animate={{ height: `${Math.max(height, 2)}%` }}
-                  transition={{ duration: 0.5, delay: index * 0.05 }}
-                  whileHover={{ scale: 1.05 }}
+                  animate={{ height: `${heightPx}px` }}
+                  transition={{ duration: 0.5, delay: index * 0.05, ease: 'easeOut' }}
+                  whileHover={{ scaleX: 1.1 }}
                 >
                   {/* Tooltip */}
                   {hoveredIndex === index && tooltipData && (

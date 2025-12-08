@@ -120,9 +120,17 @@ export async function getProductivityStats(
   // ═══════════════════════════════════════════════════════════
   const weeklyStats: WeeklyStats[] = []
   
+  // Calculer le début de la semaine actuelle (lundi)
+  const currentWeekStart = new Date(today)
+  const dayOfWeek = currentWeekStart.getDay()
+  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1 // Dimanche = 0
+  currentWeekStart.setDate(currentWeekStart.getDate() - daysToMonday)
+  currentWeekStart.setHours(0, 0, 0, 0)
+  
+  // Générer les stats pour chaque semaine (de la plus récente à la plus ancienne)
   for (let w = 0; w < period; w++) {
-    const weekStart = new Date(today)
-    weekStart.setDate(weekStart.getDate() - (period - w) * 7)
+    const weekStart = new Date(currentWeekStart)
+    weekStart.setDate(weekStart.getDate() - w * 7)
     const weekEnd = new Date(weekStart)
     weekEnd.setDate(weekEnd.getDate() + 6)
 
@@ -170,6 +178,9 @@ export async function getProductivityStats(
       xpEarned,
     })
   }
+
+  // Inverser pour avoir la semaine actuelle en premier
+  weeklyStats.reverse()
 
   // ═══════════════════════════════════════════════════════════
   // 📊 ÉVOLUTION DE L'XP QUOTIDIEN

@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { signOut } from 'next-auth/react'
 import CreateHabitForm from '@/components/create-habit-form'
 import EditHabitModal from '@/components/edit-habit-modal'
 import CatchUpModal from '@/components/catch-up-modal'
 import { MobileNav } from '@/components/mobile-nav'
 import { HedgehogDisplay } from '@/components/hedgehog-display'
+import { AcornAnimation } from '@/components/acorn-animation'
 import { getUserHabits, toggleHabit, checkIfShouldShowCatchUp, getMissedHabitsFromYesterday } from '@/lib/habit-actions'
 import { getUserXP } from '@/lib/user-actions'
 
@@ -34,6 +35,15 @@ interface MissedHabit {
   type: 'GOOD' | 'BAD'
 }
 
+// Type pour l'animation des glands
+interface AcornAnimationState {
+  id: string
+  startPos: { x: number; y: number }
+  endPos: { x: number; y: number }
+  count: number
+  isLoss: boolean // true si c'est une perte de glands
+}
+
 export default function Dashboard() {
   const [habits, setHabits] = useState<Habit[]>([])
   const [missedHabits, setMissedHabits] = useState<MissedHabit[]>([])
@@ -44,7 +54,13 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [togglingHabit, setTogglingHabit] = useState<number | null>(null)
   const [userXP, setUserXP] = useState(0)
+  const [acornAnimations, setAcornAnimations] = useState<AcornAnimationState[]>([])
   const today = new Date()
+
+  // Callback pour supprimer une animation terminée
+  const removeAnimation = useCallback((id: string) => {
+    setAcornAnimations(prev => prev.filter(anim => anim.id !== id))
+  }, [])
 
   // Fonction de chargement des habitudes
   async function loadHabits() {
@@ -126,8 +142,30 @@ export default function Dashboard() {
         const hedgehogElement = document.getElementById('hedgehog-container')
         
         if (habitElement && hedgehogElement) {
-          // TODO: Déclencher l'animation avec useAcornAnimation
-          // Pour l'instant, on met simplement à jour l'XP
+          const habitRect = habitElement.getBoundingClientRect()
+          const hedgehogRect = hedgehogElement.getBoundingClientRect()
+          
+          const isGain = result.xpGained > 0
+          const acornCount = Math.abs(result.xpGained) >= 50 ? 5 : 1
+          
+          // Position de départ et d'arrivée selon gain ou perte
+          const startPos = isGain 
+            ? { x: habitRect.left + habitRect.width / 2 - 16, y: habitRect.top + habitRect.height / 2 - 16 }
+            : { x: hedgehogRect.left + hedgehogRect.width / 2 - 16, y: hedgehogRect.top + hedgehogRect.height / 2 - 16 }
+          
+          const endPos = isGain
+            ? { x: hedgehogRect.left + hedgehogRect.width / 2 - 16, y: hedgehogRect.top + hedgehogRect.height / 2 - 16 }
+            : { x: habitRect.left + habitRect.width / 2 - 16, y: habitRect.top + habitRect.height / 2 - 16 }
+          
+          const animationId = `${Date.now()}-${habitId}`
+          
+          setAcornAnimations(prev => [...prev, {
+            id: animationId,
+            startPos,
+            endPos,
+            count: acornCount,
+            isLoss: !isGain,
+          }])
         }
         
         // Mettre à jour l'XP localement (peut être positif ou négatif)
@@ -170,6 +208,17 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      {/* Animations des glands */}
+      {acornAnimations.map((anim) => (
+        <AcornAnimation
+          key={anim.id}
+          startPosition={anim.startPos}
+          endPosition={anim.endPos}
+          count={anim.count}
+          onComplete={() => removeAnimation(anim.id)}
+        />
+      ))}
+      
       <div className="container mx-auto p-6 max-w-4xl">
         <header className="mb-8">
           <div className="flex items-center justify-between mb-6">

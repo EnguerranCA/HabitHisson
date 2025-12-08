@@ -155,7 +155,8 @@ export async function getUserHabits() {
 
   const userId = parseInt(session.user.id)
   const today = new Date()
-  const dateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  // Utiliser UTC pour éviter les problèmes de timezone
+  const dateOnly = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()))
 
   try {
     const habits = await prisma.habit.findMany({
@@ -194,7 +195,8 @@ export async function toggleHabit(habitId: number, date: Date) {
   }
 
   const userId = parseInt(session.user.id)
-  const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  // Utiliser UTC pour éviter les problèmes de timezone
+  const dateOnly = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
 
   try {
     // Récupérer l'habitude pour connaître sa fréquence et son type
@@ -361,7 +363,7 @@ export async function getMissedHabitsFromYesterday() {
   const userId = parseInt(session.user.id)
   const yesterday = new Date()
   yesterday.setDate(yesterday.getDate() - 1)
-  const yesterdayDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate())
+  const yesterdayDate = new Date(Date.UTC(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate()))
 
   try {
     const habits = await prisma.habit.findMany({
@@ -406,7 +408,7 @@ export async function catchUpHabit(habitId: number) {
   const userId = parseInt(session.user.id)
   const yesterday = new Date()
   yesterday.setDate(yesterday.getDate() - 1)
-  const yesterdayDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate())
+  const yesterdayDate = new Date(Date.UTC(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate()))
 
   try {
     // Vérifier si déjà rattrapé
@@ -468,7 +470,7 @@ export async function checkIfShouldShowCatchUp() {
     })
 
     const today = new Date()
-    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    const todayDate = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()))
 
     // Si pas de lastLoginDate ou si c'était hier ou avant
     if (!userProgress?.lastLoginDate) {
@@ -488,12 +490,12 @@ export async function checkIfShouldShowCatchUp() {
     }
 
     const lastLogin = new Date(userProgress.lastLoginDate)
-    const lastLoginDate = new Date(lastLogin.getFullYear(), lastLogin.getMonth(), lastLogin.getDate())
+    const lastLoginDate = new Date(Date.UTC(lastLogin.getFullYear(), lastLogin.getMonth(), lastLogin.getDate()))
 
     // Si le dernier login était hier, proposer le rattrapage
     const yesterday = new Date(today)
     yesterday.setDate(yesterday.getDate() - 1)
-    const yesterdayDate = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate())
+    const yesterdayDate = new Date(Date.UTC(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate()))
 
     if (lastLoginDate.getTime() < todayDate.getTime()) {
       // Mettre à jour le lastLoginDate

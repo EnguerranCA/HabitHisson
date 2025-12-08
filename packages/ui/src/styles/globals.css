@@ -69,4 +69,24 @@
   body {
     @apply bg-background text-foreground antialiased;
   }
+
+  /* Curseur pointer pour tous les éléments interactifs */
+  button,
+  [role="button"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"],
+  a,
+  select,
+  input[type="checkbox"],
+  input[type="radio"],
+  label[for],
+  .cursor-pointer {
+    cursor: pointer !important;
+  }
+
+  button:disabled,
+  [disabled] {
+    cursor: not-allowed !important;
+  }
 }
