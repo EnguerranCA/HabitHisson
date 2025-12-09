@@ -91,24 +91,6 @@
 - [ ] Animation des glands partant de l'habitude vers le hérisson (composant créé, non connecté)
 - [ ] Réaction visuelle du hérisson quand il reçoit des glands
 
-### US11. En tant qu'utilisateur, je veux débloquer des éléments de décor à certains niveaux pour personnaliser l'environnement.
-**Critères d'acceptation :**
-- [ ] Catalogue d'éléments débloqués par niveau (arbres, fleurs, rochers)
-- [ ] Interface de placement pour positionner les éléments
-- [ ] Sauvegarde de la configuration du décor
-- [ ] Preview avant placement définitif
-- [ ] Limite d'éléments par type pour éviter le chaos visuel
-- [ ] Possibilité de supprimer/déplacer les éléments placés
-
-### US12. En tant qu'utilisateur, je veux associer une tâche à un élément du décor pour lier mes habitudes à la croissance du monde virtuel.
-**Critères d'acceptation :**
-- [ ] Lors de la création d'habitude, sélection d'un élément de décor associé
-- [ ] L'élément grandit/fleurit quand l'habitude est accomplie
-- [ ] États visuels dégradés si l'habitude est négligée
-- [ ] Lien visible entre habitude et élément (tooltip/highlight)
-- [ ] Possibilité de changer l'association après création
-- [ ] Animation spéciale lors de l'accomplissement de l'habitude liée
-
 ### US13. En tant qu'utilisateur, je veux un graphique pour visualiser ma productivité sur une période.
 **Critères d'acceptation :**
 - [ ] Graphique en barres par semaine/mois montrant le % de réussite

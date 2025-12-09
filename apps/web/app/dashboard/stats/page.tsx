@@ -9,12 +9,15 @@ import {
   HabitStatsCard,
   GlobalStatsCard 
 } from '@/components/stats-charts'
+import { LeaderboardCard } from '@/components/leaderboard-card'
 import { getProductivityStats, type ProductivityStats } from '@/lib/stats-actions'
+import { getLeaderboard, type LeaderboardData } from '@/lib/leaderboard-actions'
 import { motion } from 'framer-motion'
 import { RefreshCw } from 'lucide-react'
 
 export default function StatsPage() {
   const [stats, setStats] = useState<ProductivityStats | null>(null)
+  const [leaderboard, setLeaderboard] = useState<LeaderboardData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -24,8 +27,12 @@ export default function StatsPage() {
   const loadStats = async () => {
     setLoading(true)
     try {
-      const data = await getProductivityStats(12)
-      setStats(data)
+      const [statsData, leaderboardData] = await Promise.all([
+        getProductivityStats(12),
+        getLeaderboard('all-time')
+      ])
+      setStats(statsData)
+      setLeaderboard(leaderboardData)
     } catch (error) {
       console.error('Erreur chargement stats:', error)
     } finally {
@@ -114,11 +121,22 @@ export default function StatsPage() {
           <MonthComparisonCard {...stats.monthComparison} />
         </motion.div>
 
+        {/* Classement */}
+        {leaderboard && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <LeaderboardCard {...leaderboard} />
+          </motion.div>
+        )}
+
         {/* Stats par habitude */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.5 }}
         >
           <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
             🎯 Détail par habitude
@@ -135,7 +153,7 @@ export default function StatsPage() {
                   key={habit.habitId}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.5 + index * 0.05 }}
+                  transition={{ delay: 0.6 + index * 0.05 }}
                 >
                   <HabitStatsCard habit={habit} />
                 </motion.div>
