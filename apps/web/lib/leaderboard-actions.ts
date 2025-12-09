@@ -83,7 +83,7 @@ export async function getLeaderboard(period: 'week' | 'month' | 'all-time' = 'al
     // Position de l'utilisateur actuel
     const currentUserIndex = leaderboard.findIndex(entry => entry.userId === currentUserId)
     const currentUserRank = currentUserIndex >= 0 ? currentUserIndex + 1 : null
-    const currentUserEntry = currentUserIndex >= 0 ? leaderboard[currentUserIndex] : null
+    const currentUserEntry = currentUserIndex >= 0 && leaderboard[currentUserIndex] ? leaderboard[currentUserIndex] : null
 
     return {
       topPlayers,
