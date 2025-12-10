@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { signOut } from 'next-auth/react'
+import { Check, Pencil } from 'lucide-react'
 import CreateHabitForm from '@/components/create-habit-form'
 import EditHabitModal from '@/components/edit-habit-modal'
 import CatchUpModal from '@/components/catch-up-modal'
@@ -10,6 +10,7 @@ import { HedgehogDisplay } from '@/components/hedgehog-display'
 import { AcornAnimation } from '@/components/acorn-animation'
 import { getUserHabits, toggleHabit, checkIfShouldShowCatchUp, getMissedHabitsFromYesterday } from '@/lib/habit-actions'
 import { getUserXP } from '@/lib/user-actions'
+import { Plus } from 'lucide-react'
 
 interface HabitLog {
   id: number
@@ -235,19 +236,13 @@ export default function Dashboard() {
                 })}
               </p>
             </div>
-            <button 
-              onClick={() => signOut()}
-              className="bg-destructive px-4 py-2 rounded-xl transition-all hover:scale-105 font-semibold shadow-md text-white"
-            >
-              Se déconnecter
-            </button>
           </div>
 
           {/* ═══════════════════════════════════════════════════════════ */}
           {/* 🦔 Le fond derrière le hérisson */}
           {/* ═══════════════════════════════════════════════════════════ */}
           <div 
-            className="relative rounded-3xl p-4 mb-6 overflow-hidden shadow-lg border-4 "
+            className="relative rounded-3xl p-4 mb-6 overflow-hidden shadow-lg  "
             style={{
               background: 'linear-gradient(to bottom, #87CEEB 0%, #B0E0E6 40%, #90EE90 60%, #7CFC00 100%)',
             }}
@@ -305,15 +300,16 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-4">
               <h2 className="text-2xl font-bold text-foreground">
-                📋 Mes habitudes
+                Mes habitudes
               </h2>
               <button
                 onClick={() => setShowCreateForm(true)}
-                className="btn-secondary"
+                className="bg-primary rounded-2xl text-white px-4 py-2 font-medium hover:scale-105 transition-transform shadow-md cursor-pointer flex items-center gap-2"
               >
-                ➕ Ajouter une habitude
+                <Plus />
+                 Nouvelle habitude
               </button>
             </div>
             
@@ -321,13 +317,14 @@ export default function Dashboard() {
               {habits.map((habit) => {
                 const isCompleted = habit.completedToday
                 const isToggling = togglingHabit === habit.id
+                const isWeekly = habit.frequency === 'WEEKLY'
                 
                 return (
                   <div
                     key={habit.id}
                     id={`habit-${habit.id}`}
-                    className={`habit-card transition-all duration-300 rounded-2xl ${
-                      isCompleted ? 'bg-success/10 border-success/40' : 'bg-card'
+                    className={`p-4 bg-white transition-all duration-300 rounded-2xl ${
+                      isCompleted ? 'bg-success/5 border-success/40' : 'bg-card'
                     }`}
                   >
                     <div className="flex items-center justify-between rounded-2xl">
@@ -339,17 +336,22 @@ export default function Dashboard() {
                           }`}>
                             {habit.name}
                           </h3>
-                          <div className="flex space-x-2 text-sm mt-1">
-                            <span className={`px-2 py-1 rounded-full font-medium ${
+                          <div className="flex flex-wrap gap-1 text-xs mt-1">
+                            <span className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full font-medium ${
                               habit.type === 'GOOD' 
-                                ? 'bg-success/20 text-success' 
-                                : 'bg-destructive/20 text-destructive'
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
                             }`}>
-                              {habit.type === 'GOOD' ? '✨ Bonne' : '🚫 Mauvaise'}
+                              {habit.type === 'GOOD' ? 'Bonne' : 'Mauvaise'}
                             </span>
-                            <span className="px-2 py-1 bg-secondary text-secondary-foreground rounded-full font-medium">
-                              {habit.frequency === 'DAILY' ? '📅 Quotidienne' : '📊 Hebdomadaire'}
+                            <span className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-gray-200 text-gray-800 rounded-full font-medium">
+                              {habit.frequency === 'DAILY' ? 'Quotidienne' : 'Hebdomadaire'}
                             </span>
+                            {/* {isWeekly && isCompleted && (
+                              <span className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-green-100 text-green-800 rounded-full font-medium">
+                                Complété
+                              </span>
+                            )} */}
                           </div>
                         </div>
                       </div>
@@ -361,10 +363,10 @@ export default function Dashboard() {
                             setEditingHabit(habit)
                             setShowEditModal(true)
                           }}
-                          className="w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center"
+                          className="w-10 h-10 rounded-lg  hover:bg-gray-200 transition-colors flex items-center justify-center"
                           title="Modifier l'habitude"
                         >
-                          ✏️
+                          <Pencil className="h-6 w-6 text-primary" />
                         </button>
                         
                         {/* Bouton toggle */}
@@ -373,15 +375,19 @@ export default function Dashboard() {
                           disabled={isToggling}
                           className={`relative w-14 h-14 rounded-2xl border-3 transition-all duration-300 flex items-center justify-center ${
                             isCompleted
-                              ? 'bg-success border-success shadow-lg scale-110'
+                              ? 'bg-success border-success shadow-lg scale-100'
                               : 'bg-input border-border hover:border-primary hover:scale-105'
                           } ${isToggling ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                          title={isCompleted ? 'Marquer comme non fait' : 'Marquer comme fait'}
+                          title={
+                            isCompleted 
+                              ? (isWeekly ? 'Décocher (vous perdrez les glands)' : 'Marquer comme non fait')
+                              : 'Marquer comme fait'
+                          }
                         >
                           {isToggling ? (
                             <div className="animate-spin text-2xl">⏳</div>
                           ) : isCompleted ? (
-                            <span className="text-3xl font-bold text-white">✓</span>
+                            <Check className="h-8 w-8 text-white" />
                           ) : (
                             <span className="text-2xl text-muted-foreground">  
 </span>

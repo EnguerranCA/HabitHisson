@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { signOut } from 'next-auth/react'
 import { getUserProfile, updateUserProfile, type UserProfile } from '@/lib/profile-actions'
-import { User, Mail, Trophy, Calendar, TrendingUp } from 'lucide-react'
+import { User, Mail, Trophy, Calendar, TrendingUp, CheckCircle, Flame, Info, Sparkles, Target, Baby, Users, LogOut } from 'lucide-react'
 import { MobileNav } from '@/components/mobile-nav'
 import Image from 'next/image'
 
@@ -124,7 +125,10 @@ export default function ProfilePage() {
 
       {/* Statistiques Gamification */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h3 className="text-xl font-bold text-foreground mb-4">🎮 Progression</h3>
+        <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+          <Sparkles className="h-6 w-6 text-primary" />
+          Progression
+        </h3>
         
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -137,7 +141,7 @@ export default function ProfilePage() {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <TrendingUp className="h-6 w-6 text-green-500" />
+              <TrendingUp className="h-6 w-6 text-primary" />
               <span className="font-medium">Glands</span>
             </div>
             <span className="text-2xl font-bold text-green-600 flex items-center gap-2">
@@ -148,15 +152,15 @@ export default function ProfilePage() {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">🦔</span>
+              <Users className="h-6 w-6 text-primary" />
               <span className="font-medium">État du hérisson</span>
             </div>
             <span className="text-lg font-semibold capitalize text-primary">
-              {profile.hedgehogState === 'baby' && '👶 Bébé'}
-              {profile.hedgehogState === 'child' && '🧒 Enfant'}
-              {profile.hedgehogState === 'teen' && '🧑 Adolescent'}
-              {profile.hedgehogState === 'adult' && '🧔 Adulte'}
-              {profile.hedgehogState === 'elder' && '👴 Ancien'}
+              {profile.hedgehogState === 'baby' && 'Bébé'}
+              {profile.hedgehogState === 'child' && 'Enfant'}
+              {profile.hedgehogState === 'teen' && 'Adolescent'}
+              {profile.hedgehogState === 'adult' && 'Adulte'}
+              {profile.hedgehogState === 'elder' && 'Ancien'}
             </span>
           </div>
         </div>
@@ -164,20 +168,23 @@ export default function ProfilePage() {
 
       {/* Statistiques Habitudes */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h3 className="text-xl font-bold text-foreground mb-4">📊 Mes Habitudes</h3>
+        <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+          <Target className="h-6 w-6 text-primary" />
+          Mes Habitudes
+        </h3>
         
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Calendar className="h-6 w-6 text-blue-500" />
+              <Calendar className="h-6 w-6 text-primary" />
               <span className="font-medium">Habitudes actives</span>
             </div>
-            <span className="text-2xl font-bold text-blue-600">{profile.totalHabits}</span>
+            <span className="text-2xl font-bold text-primary">{profile.totalHabits}</span>
           </div>
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">✅</span>
+              <CheckCircle className="h-6 w-6 text-primary" />
               <span className="font-medium">Complétions totales</span>
             </div>
             <span className="text-2xl font-bold text-green-600">{profile.totalCompletions}</span>
@@ -185,7 +192,7 @@ export default function ProfilePage() {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">🔥</span>
+              <Flame className="h-6 w-6 text-primary" />
               <span className="font-medium">Meilleur streak</span>
             </div>
             <span className="text-2xl font-bold text-orange-600">{profile.bestStreak} jours</span>
@@ -195,7 +202,10 @@ export default function ProfilePage() {
 
       {/* Informations du compte */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-bold text-foreground mb-4">ℹ️ Informations</h3>
+        <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+          <Info className="h-6 w-6 text-primary" />
+          Informations
+        </h3>
         
         <div className="space-y-2 text-sm text-gray-600">
           <p>
@@ -208,9 +218,22 @@ export default function ProfilePage() {
           </p>
           <p>
             <strong>Profil public :</strong>{' '}
-            {profile.profilePublic ? '✅ Oui' : '❌ Non'}
+            <span className={profile.profilePublic ? 'text-green-600' : 'text-gray-500'}>
+              {profile.profilePublic ? 'Oui' : 'Non'}
+            </span>
           </p>
         </div>
+      </div>
+
+      {/* Bouton de déconnexion */}
+      <div className="mt-6">
+        <button
+          onClick={() => signOut()}
+          className="w-full bg-red-600 text-white px-4 py-3 rounded-xl transition-all hover:bg-red-700 font-semibold shadow-md flex items-center justify-center gap-2"
+        >
+          <LogOut className="h-5 w-5" />
+          Se déconnecter
+        </button>
       </div>
       </div>
       

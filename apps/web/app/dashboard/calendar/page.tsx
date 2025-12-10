@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, TrendingUp, Award, Flame } from 'lucide-react'
+import { ChevronLeft, ChevronRight, TrendingUp, Award, Flame, CheckCircle } from 'lucide-react'
 import { getHabitLogsForMonth, HabitLogWithHabit, getHabitStreaks, HabitStreak } from '@/lib/calendar-actions'
 import { MobileNav } from '@/components/mobile-nav'
 
@@ -136,78 +136,6 @@ export default function CalendarPage() {
         </div>
       ) : (
         <>
-          {/* Section Streaks (US5) */}
-          <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <Flame className="h-6 w-6 text-orange-500" />
-              🔥 Vos Streaks
-            </h2>
-            
-            {streaks.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">
-                Commencez à accomplir vos habitudes pour voir vos streaks !
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {streaks.map((streak) => (
-                  <div
-                    key={streak.habitId}
-                    className="border-2 rounded-lg p-3 transition-all hover:shadow-md"
-                    style={{ borderColor: streak.streakColor }}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl">{streak.emoji}</span>
-                        <span className="font-semibold text-foreground">{streak.habitName}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-sm font-medium" style={{ color: streak.streakColor }}>
-                        <Flame className="h-4 w-4" />
-                        {streak.currentStreak} jours
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <Award className="h-4 w-4 text-yellow-500" />
-                        <span>Record: {streak.bestStreak} jours</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <TrendingUp className="h-4 w-4" style={{ color: streak.streakColor }} />
-                        <span>{streak.totalCompletions} complétions</span>
-                      </div>
-                    </div>
-                    
-                    {/* Barre de progression vers centurion */}
-                    {streak.totalCompletions < 100 && (
-                      <div className="mt-2">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="h-2 rounded-full transition-all duration-500"
-                            style={{
-                              width: `${streak.totalCompletions}%`,
-                              backgroundColor: streak.streakColor,
-                            }}
-                          />
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1 text-center">
-                          {60 - streak.totalCompletions} complétions avant le badge Superhisson 🏆
-                        </p>
-                      </div>
-                    )}
-                    
-                    {streak.totalCompletions >= 60 && (
-                      <div className="mt-2 text-center">
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">
-                          🏆 Superhisson 🏆
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
           {/* Calendrier */}
           <div className="bg-white rounded-lg shadow-md p-4 mb-6">
             {/* Jours de la semaine */}
@@ -261,6 +189,60 @@ export default function CalendarPage() {
             </div>
           </div>
 
+          {/* Section Streaks (US5) - Version simplifiée */}
+          <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+              <Flame className="h-6 w-6 text-primary" />
+              Vos Streaks
+            </h2>
+            
+            {streaks.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">
+                Commencez à accomplir vos habitudes pour voir vos streaks !
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {streaks.map((streak) => (
+                  <div
+                    key={streak.habitId}
+                    className="border-2 rounded-lg p-4 transition-all hover:shadow-md"
+                    style={{ borderColor: streak.streakColor }}
+                  >
+                    {/* En-tête avec nom et emoji */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-2xl">{streak.emoji}</span>
+                      <span className="font-semibold text-foreground text-lg">{streak.habitName}</span>
+                    </div>
+                    
+                    {/* Les 3 statistiques essentielles */}
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                      {/* Streak actuelle */}
+                      <div className="flex flex-col items-center">
+                        <TrendingUp className="h-5 w-5 text-primary mb-1" />
+                        <span className="text-2xl font-bold text-primary">{streak.currentStreak}</span>
+                        <span className="text-xs text-gray-600">Actuelle</span>
+                      </div>
+                      
+                      {/* Meilleure streak */}
+                      <div className="flex flex-col items-center">
+                        <Award className="h-5 w-5 text-primary mb-1" />
+                        <span className="text-2xl font-bold text-primary">{streak.bestStreak}</span>
+                        <span className="text-xs text-gray-600">Record</span>
+                      </div>
+                      
+                      {/* Complétions */}
+                      <div className="flex flex-col items-center">
+                        <CheckCircle className="h-5 w-5 text-primary mb-1" />
+                        <span className="text-2xl font-bold text-primary">{streak.totalCompletions}</span>
+                        <span className="text-xs text-gray-600">Total</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Détails du jour sélectionné */}
           {selectedDay !== null && (
             <div className="bg-white rounded-lg shadow-md p-4 animate-in slide-in-from-bottom duration-300">
@@ -299,24 +281,6 @@ export default function CalendarPage() {
             </div>
           )}
 
-          {/* Légende */}
-          <div className="bg-white rounded-lg shadow-md p-4 mt-6">
-            <h3 className="font-semibold text-foreground mb-3">Légende :</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-green-500" />
-                <span>Habitude accomplie</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-red-500" />
-                <span>Habitude manquée</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-gray-400" />
-                <span>Aujourd&apos;hui (pas encore fait)</span>
-              </div>
-            </div>
-          </div>
         </>
       )}
       </div>

@@ -146,6 +146,31 @@ export async function deleteHabit(habitId: number) {
   }
 }
 
+// ═══════════════════════════════════════════════════════════
+// 📅 HELPER FUNCTIONS FOR WEEKLY HABITS
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Retourne le lundi de la semaine actuelle (00:00:00)
+ */
+function getStartOfWeek(date: Date): Date {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+  const day = d.getDay()
+  const diff = day === 0 ? -6 : 1 - day // Si dimanche (0), reculer de 6 jours, sinon aller au lundi
+  d.setDate(d.getDate() + diff)
+  return d
+}
+
+/**
+ * Retourne le dimanche de la semaine actuelle (23:59:59)
+ */
+function getEndOfWeek(date: Date): Date {
+  const start = getStartOfWeek(date)
+  const end = new Date(start)
+  end.setDate(start.getDate() + 6)
+  return end
+}
+
 export async function getUserHabits() {
   const session = await auth()
   
@@ -157,6 +182,8 @@ export async function getUserHabits() {
   const today = new Date()
   // Utiliser UTC pour éviter les problèmes de timezone
   const dateOnly = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()))
+  const weekStart = getStartOfWeek(today)
+  const weekEnd = getEndOfWeek(today)
 
   try {
     const habits = await prisma.habit.findMany({
@@ -167,7 +194,17 @@ export async function getUserHabits() {
       include: {
         habitLogs: {
           where: {
-            date: dateOnly
+            // Pour les quotidiennes : aujourd'hui
+            // Pour les hebdomadaires : toute la semaine
+            OR: [
+              { date: dateOnly }, // Aujourd'hui
+              { 
+                date: {
+                  gte: weekStart,
+                  lte: weekEnd
+                }
+              }
+            ]
           }
         }
       },
@@ -176,11 +213,27 @@ export async function getUserHabits() {
       }
     })
     
-    // Ajouter le statut de complétion pour aujourd'hui
-    return habits.map(habit => ({
-      ...habit,
-      completedToday: habit.habitLogs[0]?.completed ?? false
-    }))
+    // Ajouter le statut de complétion pour aujourd'hui ou cette semaine
+    return habits.map(habit => {
+      let completedToday = false
+      
+      if (habit.frequency === 'DAILY') {
+        // Pour les quotidiennes : vérifier aujourd'hui
+        completedToday = habit.habitLogs.some(
+          log => log.date.getTime() === dateOnly.getTime() && log.completed
+        )
+      } else if (habit.frequency === 'WEEKLY') {
+        // Pour les hebdomadaires : vérifier si complété n'importe quel jour cette semaine
+        completedToday = habit.habitLogs.some(
+          log => log.completed && log.date >= weekStart && log.date <= weekEnd
+        )
+      }
+      
+      return {
+        ...habit,
+        completedToday
+      }
+    })
   } catch (error) {
     console.error('Error fetching habits:', error)
     return []
@@ -364,28 +417,54 @@ export async function getMissedHabitsFromYesterday() {
   const yesterday = new Date()
   yesterday.setDate(yesterday.getDate() - 1)
   const yesterdayDate = new Date(Date.UTC(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate()))
+  
+  // Pour les hebdomadaires : vérifier toute la semaine actuelle
+  const today = new Date()
+  const weekStart = getStartOfWeek(today)
+  const weekEnd = getEndOfWeek(today)
 
   try {
+    // Récupérer TOUTES les habitudes actives (quotidiennes ET hebdomadaires)
     const habits = await prisma.habit.findMany({
       where: {
         userId,
-        isActive: true,
-        frequency: 'DAILY' // Seules les habitudes quotidiennes peuvent être rattrapées
+        isActive: true
       },
       include: {
         habitLogs: {
           where: {
-            date: yesterdayDate
+            OR: [
+              { date: yesterdayDate }, // Pour les quotidiennes d'hier
+              { 
+                date: {
+                  gte: weekStart,
+                  lte: weekEnd
+                },
+                completed: true // Pour vérifier si les hebdomadaires sont déjà complétées cette semaine
+              }
+            ]
           }
         }
       }
     })
     
-    // Filtrer les habitudes non complétées hier
-    return habits.filter(habit => 
-      habit.habitLogs.length === 0 || 
-      (habit.habitLogs[0] && !habit.habitLogs[0].completed)
-    ).map(habit => ({
+    // Filtrer selon le type d'habitude
+    const missedHabits = habits.filter(habit => {
+      if (habit.frequency === 'DAILY') {
+        // Pour les quotidiennes : vérifier si non complétée hier
+        return habit.habitLogs.length === 0 || 
+          (habit.habitLogs[0] && !habit.habitLogs[0].completed)
+      } else if (habit.frequency === 'WEEKLY') {
+        // Pour les hebdomadaires : vérifier si non complétée cette semaine
+        const completedThisWeek = habit.habitLogs.some(
+          log => log.completed && log.date >= weekStart && log.date <= weekEnd
+        )
+        return !completedThisWeek
+      }
+      return false
+    })
+    
+    return missedHabits.map(habit => ({
       id: habit.id,
       name: habit.name,
       emoji: habit.emoji,

@@ -28,7 +28,7 @@ export default function StatsPage() {
     setLoading(true)
     try {
       const [statsData, leaderboardData] = await Promise.all([
-        getProductivityStats(12),
+        getProductivityStats(6), // 6 semaines au lieu de 12
         getLeaderboard('all-time')
       ])
       setStats(statsData)
