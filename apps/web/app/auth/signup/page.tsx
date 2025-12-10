@@ -28,7 +28,7 @@ export default function SignUpPage() {
               name="name"
               type="text"
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors bg-white text-gray-900 [&:-webkit-autofill]:bg-white [&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_white] [&:-webkit-autofill]:[-webkit-text-fill-color:theme(colors.gray.900)]"
               placeholder="Votre nom"
             />
             {state?.errors?.name && (
@@ -49,7 +49,7 @@ export default function SignUpPage() {
               name="email"
               type="email"
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors bg-white text-gray-900 [&:-webkit-autofill]:bg-white [&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_white] [&:-webkit-autofill]:[-webkit-text-fill-color:theme(colors.gray.900)]"
               placeholder="votre@email.com"
             />
             {state?.errors?.email && (
@@ -70,7 +70,7 @@ export default function SignUpPage() {
               name="password"
               type="password"
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors bg-white text-gray-900 [&:-webkit-autofill]:bg-white [&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_white] [&:-webkit-autofill]:[-webkit-text-fill-color:theme(colors.gray.900)]"
               placeholder="••••••••"
             />
             {state?.errors?.password && (

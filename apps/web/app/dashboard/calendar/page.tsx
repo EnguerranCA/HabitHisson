@@ -157,31 +157,39 @@ export default function CalendarPage() {
                 const dayLogs = getLogsForDay(day)
                 const todayFlag = isToday(day)
                 const isSelected = selectedDay === day
+                const maxDisplayPills = 6
+                const visibleLogs = dayLogs.slice(0, maxDisplayPills)
+                const remainingCount = dayLogs.length - maxDisplayPills
 
                 return (
                   <button
                     key={day}
                     onClick={() => setSelectedDay(selectedDay === day ? null : day)}
                     className={`
-                      aspect-square p-1 rounded-lg border transition-all
+                      min-h-[60px] md:min-h-[80px] p-1.5 md:p-2 rounded-lg border transition-all flex flex-col items-center justify-start
                       ${todayFlag ? 'border-primary border-2 bg-secondary' : 'border-border'}
                       ${isSelected ? 'ring-2 ring-primary scale-105' : ''}
                       hover:bg-secondary hover:scale-105
                     `}
                   >
-                    <div className="text-sm font-medium text-foreground mb-1">
+                    <div className="text-sm md:text-base font-medium text-foreground mb-1">
                       {day}
                     </div>
                     
                     {/* Pastilles des habitudes */}
-                    <div className="flex flex-wrap gap-1 justify-center">
-                      {dayLogs.map((log) => (
+                    <div className="flex flex-wrap gap-0.5 md:gap-1 justify-center max-w-full">
+                      {visibleLogs.map((log) => (
                         <div
                           key={log.id}
-                          className={`h-2 w-2 rounded-full ${getPillColor(log.completed, todayFlag)}`}
+                          className={`h-1.5 w-1.5 md:h-2 md:w-2 rounded-full ${getPillColor(log.completed, todayFlag)}`}
                           title={`${log.habit.emoji} ${log.habit.name}: ${log.completed ? 'Fait' : 'Manqué'}`}
                         />
                       ))}
+                      {remainingCount > 0 && (
+                        <div className="text-[8px] md:text-[10px] font-bold text-gray-700 bg-gray-200 rounded-full px-1 leading-tight">
+                          +{remainingCount}
+                        </div>
+                      )}
                     </div>
                   </button>
                 )

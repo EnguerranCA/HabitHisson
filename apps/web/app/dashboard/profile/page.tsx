@@ -216,12 +216,6 @@ export default function ProfilePage() {
               year: 'numeric',
             })}
           </p>
-          <p>
-            <strong>Profil public :</strong>{' '}
-            <span className={profile.profilePublic ? 'text-green-600' : 'text-gray-500'}>
-              {profile.profilePublic ? 'Oui' : 'Non'}
-            </span>
-          </p>
         </div>
       </div>
 

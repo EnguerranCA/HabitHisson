@@ -13,7 +13,7 @@ import { LeaderboardCard } from '@/components/leaderboard-card'
 import { getProductivityStats, type ProductivityStats } from '@/lib/stats-actions'
 import { getLeaderboard, type LeaderboardData } from '@/lib/leaderboard-actions'
 import { motion } from 'framer-motion'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, BarChart3, Target } from 'lucide-react'
 
 export default function StatsPage() {
   const [stats, setStats] = useState<ProductivityStats | null>(null)
@@ -73,7 +73,8 @@ export default function StatsPage() {
         {/* Header */}
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-            📊 Statistiques
+            <BarChart3 className="text-primary" size={32} />
+            Statistiques
           </h1>
         </header>
 
@@ -138,8 +139,9 @@ export default function StatsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-            🎯 Détail par habitude
+          <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2 mt-8">
+            <Target className="text-primary" size={24} />
+            Détail par habitude
           </h2>
 
           {stats.habits.length === 0 ? (

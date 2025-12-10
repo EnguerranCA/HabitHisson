@@ -49,9 +49,26 @@ export async function getHabitLogsForMonth(year: number, month: number) {
   // Date de début et fin du mois
   const startDate = new Date(year, month - 1, 1)
   const endDate = new Date(year, month, 0, 23, 59, 59)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
 
-  // Récupérer tous les HabitLogs du mois avec les infos de l'habitude
-  const habitLogs = await prisma.habitLog.findMany({
+  // Récupérer toutes les habitudes actives
+  const habits = await prisma.habit.findMany({
+    where: {
+      userId: user.id,
+      isActive: true,
+    },
+    select: {
+      id: true,
+      name: true,
+      emoji: true,
+      type: true,
+      createdAt: true,
+    },
+  })
+
+  // Récupérer tous les HabitLogs du mois existants
+  const existingLogs = await prisma.habitLog.findMany({
     where: {
       userId: user.id,
       date: {
@@ -74,7 +91,56 @@ export async function getHabitLogsForMonth(year: number, month: number) {
     },
   })
 
-  return habitLogs as HabitLogWithHabit[]
+  // Créer une Map pour un accès rapide aux logs existants
+  const existingLogsMap = new Map<string, typeof existingLogs[0]>()
+  existingLogs.forEach(log => {
+    const logDate = new Date(log.date)
+    const key = `${log.habitId}-${logDate.getFullYear()}-${logDate.getMonth() + 1}-${logDate.getDate()}`
+    existingLogsMap.set(key, log)
+  })
+
+  // Générer tous les logs (existants + virtuels)
+  const allLogs: HabitLogWithHabit[] = []
+  const daysInMonth = new Date(year, month, 0).getDate()
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const currentDate = new Date(year, month - 1, day)
+    currentDate.setHours(0, 0, 0, 0)
+    
+    // Ne pas créer de logs pour les jours futurs
+    if (currentDate > today) continue
+
+    for (const habit of habits) {
+      // Ne pas créer de logs pour les jours avant la création de l'habitude
+      const habitCreatedDate = new Date(habit.createdAt)
+      habitCreatedDate.setHours(0, 0, 0, 0)
+      
+      if (currentDate < habitCreatedDate) continue
+
+      const logKey = `${habit.id}-${year}-${month}-${day}`
+
+      if (existingLogsMap.has(logKey)) {
+        // Log existant
+        allLogs.push(existingLogsMap.get(logKey)!)
+      } else {
+        // Log virtuel (non complété)
+        allLogs.push({
+          id: -(habit.id * 1000 + day), // ID négatif unique pour les logs virtuels
+          habitId: habit.id,
+          date: new Date(currentDate),
+          completed: false,
+          habit: {
+            id: habit.id,
+            name: habit.name,
+            emoji: habit.emoji,
+            type: habit.type,
+          },
+        })
+      }
+    }
+  }
+
+  return allLogs
 }
 
 /**

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useState } from 'react'
 import Image from 'next/image'
 import type { WeeklyStats, DailyXP } from '@/lib/stats-actions'
+import { BarChart3, TrendingUp, Calendar, Target, CheckCircle, Flame, Users, Award } from 'lucide-react'
 
 // ═══════════════════════════════════════════════════════════
 // 📊 GRAPHIQUE EN BARRES - TAUX DE RÉUSSITE HEBDOMADAIRE
@@ -42,7 +43,8 @@ export function WeeklyBarChart({ data, title, showXP = false }: BarChartProps) {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-orange-100">
       <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-        📊 {title}
+        <BarChart3 className="text-primary" size={20} />
+        {title}
       </h3>
 
       {/* Graphique */}
@@ -99,10 +101,12 @@ export function WeeklyBarChart({ data, title, showXP = false }: BarChartProps) {
                         Semaine du {formatWeekLabel(tooltipData.weekStart)}
                       </div>
                       <div className="flex items-center gap-1">
-                        <span>✅ {tooltipData.completedHabits}/{tooltipData.totalHabits}</span>
+                        <CheckCircle size={12} />
+                        <span>{tooltipData.completedHabits}/{tooltipData.totalHabits}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <span>📈 {tooltipData.successRate}% réussite</span>
+                        <TrendingUp size={12} />
+                        <span>{tooltipData.successRate}% réussite</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Image src="/icons/gland.webp" alt="gland" width={12} height={12} />
@@ -351,7 +355,8 @@ export function MonthComparisonCard({ currentMonth, previousMonth, change }: Mon
   return (
     <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-orange-100">
       <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-        📅 Comparaison mensuelle
+        <Calendar className="text-primary" size={20} />
+        Comparaison mensuelle
       </h3>
 
       <div className="grid grid-cols-2 gap-4">
@@ -379,7 +384,7 @@ export function MonthComparisonCard({ currentMonth, previousMonth, change }: Mon
 
         {/* Mois actuel */}
         <div className="bg-orange-50 rounded-xl p-4 border-2 border-orange-200">
-          <h4 className="font-semibold text-orange-600 mb-3">{currentMonth.name} 📍</h4>
+          <h4 className="font-semibold text-orange-600 mb-3">{currentMonth.name}</h4>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-500">Réussite</span>
@@ -460,18 +465,20 @@ export function HabitStatsCard({ habit }: HabitStatsCardProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 text-center text-sm">
+      <div className="grid grid-cols-2 gap-2 text-center text-sm">
         <div className="bg-gray-50 rounded-lg p-2">
-          <div className="font-bold text-gray-700">{habit.totalCompletions}</div>
+          <div className="font-bold text-gray-700 flex items-center justify-center gap-1">
+            <CheckCircle size={16} className="text-primary" />
+            {habit.totalCompletions}
+          </div>
           <div className="text-xs text-gray-500">Total</div>
         </div>
         <div className="bg-orange-50 rounded-lg p-2">
-          <div className="font-bold text-orange-600">🔥 {habit.currentStreak}</div>
+          <div className="font-bold text-orange-600 flex items-center justify-center gap-1">
+            <Flame size={16} />
+            {habit.currentStreak}
+          </div>
           <div className="text-xs text-gray-500">Streak</div>
-        </div>
-        <div className="bg-yellow-50 rounded-lg p-2">
-          <div className="font-bold text-yellow-600">🏆 {habit.bestStreak}</div>
-          <div className="text-xs text-gray-500">Record</div>
         </div>
       </div>
     </motion.div>
@@ -500,7 +507,8 @@ export function GlobalStatsCard({
   return (
     <div className="bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl p-6 text-white shadow-lg">
       <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-        🦔 Vue d'ensemble
+        <Target size={20} />
+        Vue d'ensemble
       </h3>
       
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
