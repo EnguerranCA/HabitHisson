@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { 
   Target, 
   Calendar, 
@@ -30,13 +30,19 @@ export default function LandingPage() {
   useEffect(() => {
     setMounted(true)
     
+    // Précharger toutes les images au montage
+    hedgehogStages.forEach((src) => {
+      const img = new window.Image()
+      img.src = src
+    })
+    
     // Alterner entre les 3 stades de hérisson toutes les 3 secondes
     const interval = setInterval(() => {
       setCurrentStage((prev) => (prev + 1) % 3)
     }, 3000)
     
     return () => clearInterval(interval)
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Parallax effect
   const y1 = useTransform(scrollY, [0, 300], [0, 50])
@@ -83,12 +89,12 @@ export default function LandingPage() {
               Crée de bonnes habitudes avec ton hérisson personnel et deviens la meilleure version de toi-même ! 🦔
             </p>
             
-            {/* Hérisson Hero */}
+            {/* Hérisson Hero avec dimensions fixes pour éviter les sauts */}
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.5 }}
-              className="my-12"
+              className="mb-36 relative z-0"
             >
               <div className="inline-block relative">
                 <motion.div
@@ -100,22 +106,28 @@ export default function LandingPage() {
                     repeat: Infinity,
                     ease: "easeInOut"
                   }}
+                  className="relative"
+                  style={{ width: 200, height: 200 }}
                 >
-                  <motion.div
-                    key={currentStage}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <Image 
-                      src={hedgehogStages[currentStage]!} 
-                      alt="Hérisson" 
-                      width={200} 
-                      height={200}
-                      className="drop-shadow-2xl"
-                    />
-                  </motion.div>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentStage}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="absolute inset-0"
+                    >
+                      <Image 
+                        src={hedgehogStages[currentStage]!} 
+                        alt="Hérisson" 
+                        width={200} 
+                        height={200}
+                        className="drop-shadow-2xl"
+                        priority
+                      />
+                    </motion.div>
+                  </AnimatePresence>
                 </motion.div>
                 <motion.div
                   animate={{ 
@@ -133,7 +145,7 @@ export default function LandingPage() {
 
             <Link 
               href="/auth/signup"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-orange-700 text-white font-bold py-4 px-8 rounded-full text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+              className="inline-flex items-center gap-2 bg-primary hover:bg-orange-700 text-white font-bold py-4 px-8 rounded-full text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105 relative z-20"
             >
               Commencer gratuitement
               <ArrowRight className="h-5 w-5" />
