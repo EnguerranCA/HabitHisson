@@ -1,0 +1,439 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { Check, Pencil, Plus, RefreshCw } from 'lucide-react'
+import { motion } from 'framer-motion'
+import CreateHabitForm from '@/components/create-habit-form'
+import EditHabitModal from '@/components/edit-habit-modal'
+import CatchUpModal from '@/components/catch-up-modal'
+import { MobileNav } from '@/components/mobile-nav'
+import { HedgehogDisplay } from '@/components/hedgehog-display'
+import { AcornAnimation } from '@/components/acorn-animation'
+import { getUserHabits, toggleHabit, checkIfShouldShowCatchUp, getMissedHabitsFromYesterday } from '@/lib/habit-actions'
+import { getUserXP } from '@/lib/user-actions'
+
+interface HabitLog {
+  id: number
+  completed: boolean
+  date: Date
+}
+
+interface Habit {
+  id: number
+  name: string
+  emoji: string
+  type: 'GOOD' | 'BAD'
+  frequency: 'DAILY' | 'WEEKLY'
+  createdAt: Date
+  habitLogs: HabitLog[]
+  completedToday?: boolean
+}
+
+interface MissedHabit {
+  id: number
+  name: string
+  emoji: string
+  type: 'GOOD' | 'BAD'
+}
+
+// Type pour l'animation des glands
+interface AcornAnimationState {
+  id: string
+  startPos: { x: number; y: number }
+  endPos: { x: number; y: number }
+  count: number
+  isLoss: boolean // true si c'est une perte de glands
+}
+
+export default function Dashboard() {
+  const [habits, setHabits] = useState<Habit[]>([])
+  const [missedHabits, setMissedHabits] = useState<MissedHabit[]>([])
+  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null)
+  const [showCatchUpModal, setShowCatchUpModal] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [togglingHabit, setTogglingHabit] = useState<number | null>(null)
+  const [userXP, setUserXP] = useState(0)
+  const [acornAnimations, setAcornAnimations] = useState<AcornAnimationState[]>([])
+  const today = new Date()
+
+  // Callback pour supprimer une animation terminée
+  const removeAnimation = useCallback((id: string) => {
+    setAcornAnimations(prev => prev.filter(anim => anim.id !== id))
+  }, [])
+
+  // Fonction de chargement des habitudes
+  async function loadHabits() {
+    try {
+      setLoading(true)
+      const userHabits = await getUserHabits()
+      setHabits(userHabits)
+    } catch (error) {
+      console.error('Erreur lors du chargement des habitudes:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Chargement initial + vérification rattrapage
+  useEffect(() => {
+    async function initialize() {
+      try {
+        // Charger les habitudes et l'XP en parallèle
+        const [userHabits, xpData] = await Promise.all([
+          getUserHabits(),
+          getUserXP(),
+        ])
+        
+        setHabits(userHabits)
+        setUserXP(xpData.xp)
+        setLoading(false)
+
+        // Vérifier s'il faut afficher le popup de rattrapage (seulement au premier chargement)
+        const shouldShow = await checkIfShouldShowCatchUp()
+        if (shouldShow) {
+          const missed = await getMissedHabitsFromYesterday()
+          if (missed.length > 0) {
+            setMissedHabits(missed)
+            setShowCatchUpModal(true)
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement:', error)
+        setLoading(false)
+      }
+    }
+    
+    initialize()
+  }, [])
+
+  const handleToggleHabit = async (habitId: number) => {
+    setTogglingHabit(habitId)
+    
+    // Mise à jour optimiste de l'interface
+    setHabits(prevHabits => 
+      prevHabits.map(h => 
+        h.id === habitId 
+          ? { ...h, completedToday: !h.completedToday }
+          : h
+      )
+    )
+    
+    try {
+      const result = await toggleHabit(habitId, today)
+      
+      if (!result.success) {
+        // Annuler la mise à jour optimiste en cas d'erreur
+        setHabits(prevHabits => 
+          prevHabits.map(h => 
+            h.id === habitId 
+              ? { ...h, completedToday: !h.completedToday }
+              : h
+          )
+        )
+        console.error('Erreur:', result.error)
+      } else if (result.xpGained !== undefined && result.xpGained !== 0) {
+        // ═══════════════════════════════════════════════════════════
+        // 🌰 ANIMATION DES GLANDS (US10)
+        // ═══════════════════════════════════════════════════════════
+        
+        // Déclencher l'animation des glands vers le hérisson
+        const habitElement = document.getElementById(`habit-${habitId}`)
+        const hedgehogElement = document.getElementById('hedgehog-container')
+        
+        if (habitElement && hedgehogElement) {
+          const habitRect = habitElement.getBoundingClientRect()
+          const hedgehogRect = hedgehogElement.getBoundingClientRect()
+          
+          const isGain = result.xpGained > 0
+          const acornCount = Math.abs(result.xpGained) >= 50 ? 5 : 1
+          
+          // Position de départ et d'arrivée selon gain ou perte
+          const startPos = isGain 
+            ? { x: habitRect.left + habitRect.width / 2 - 16, y: habitRect.top + habitRect.height / 2 - 16 }
+            : { x: hedgehogRect.left + hedgehogRect.width / 2 - 16, y: hedgehogRect.top + hedgehogRect.height / 2 - 16 }
+          
+          const endPos = isGain
+            ? { x: hedgehogRect.left + hedgehogRect.width / 2 - 16, y: hedgehogRect.top + hedgehogRect.height / 2 - 16 }
+            : { x: habitRect.left + habitRect.width / 2 - 16, y: habitRect.top + habitRect.height / 2 - 16 }
+          
+          const animationId = `${Date.now()}-${habitId}`
+          
+          setAcornAnimations(prev => [...prev, {
+            id: animationId,
+            startPos,
+            endPos,
+            count: acornCount,
+            isLoss: !isGain,
+          }])
+        }
+        
+        // Mettre à jour l'XP localement (peut être positif ou négatif)
+        setUserXP(prev => Math.max(0, prev + result.xpGained!))
+        
+        // Recharger l'XP depuis le serveur après un délai (pour s'assurer de la synchro)
+        setTimeout(async () => {
+          const xpData = await getUserXP()
+          setUserXP(xpData.xp)
+        }, 1500)
+      }
+    } catch (error) {
+      // Annuler la mise à jour optimiste
+      setHabits(prevHabits => 
+        prevHabits.map(h => 
+          h.id === habitId 
+            ? { ...h, completedToday: !h.completedToday }
+            : h
+        )
+      )
+      console.error('Erreur lors du toggle de l\'habitude:', error)
+    } finally {
+      setTogglingHabit(null)
+    }
+  }
+
+  const handleHabitCreated = () => {
+    setShowCreateForm(false)
+    // Recharger les habitudes
+    loadHabits()
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
+        <div className="text-2xl text-orange-600">Chargement... 🦔</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-background pb-24">
+      {/* Animations des glands */}
+      {acornAnimations.map((anim) => (
+        <AcornAnimation
+          key={anim.id}
+          startPosition={anim.startPos}
+          endPosition={anim.endPos}
+          count={anim.count}
+          onComplete={() => removeAnimation(anim.id)}
+        />
+      ))}
+      
+      <div className="container mx-auto p-6 max-w-4xl">
+        <header className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-4xl font-bold text-foreground mb-2">
+                🦔 Salut !
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                {today.toLocaleDateString('fr-FR', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </p>
+            </div>
+          </div>
+
+          {/* ═══════════════════════════════════════════════════════════ */}
+          {/* 🦔 Le fond derrière le hérisson */}
+          {/* ═══════════════════════════════════════════════════════════ */}
+          <div 
+            className="relative rounded-3xl p-4 mb-6 overflow-hidden shadow-lg  "
+            style={{
+              background: 'linear-gradient(to bottom, #87CEEB 0%, #B0E0E6 40%, #90EE90 60%, #7CFC00 100%)',
+            }}
+          >
+            {/* Soleil */}
+            <div className="absolute top-6 right-8 w-16 h-16 bg-yellow-300 rounded-full shadow-lg"></div>
+            
+            {/* Nuages flat */}
+            <div className="absolute top-12 left-12">
+              <div className="flex items-center">
+                <div className="w-12 h-8 bg-white rounded-full"></div>
+                <div className="w-16 h-10 bg-white rounded-full -ml-4"></div>
+                <div className="w-12 h-8 bg-white rounded-full -ml-4"></div>
+              </div>
+            </div>
+            
+            <div className="absolute top-20 right-24">
+              <div className="flex items-center opacity-80">
+                <div className="w-10 h-7 bg-white rounded-full"></div>
+                <div className="w-14 h-9 bg-white rounded-full -ml-3"></div>
+                <div className="w-10 h-7 bg-white rounded-full -ml-3"></div>
+              </div>
+            </div>
+
+            {/* Collines au loin */}
+            <div className="absolute bottom-0 left-0 right-0 h-32 bg-green-400 rounded-t-full transform scale-x-150"></div>
+
+
+
+
+            {/* Hérisson au centre */}
+            <div className="relative z-10 flex justify-center" id="hedgehog-container">
+              <HedgehogDisplay xp={userXP} showXPBar={true} size="medium" />
+            </div>
+          </div>
+
+        </header>
+
+        {habits.length === 0 ? (
+          <div className="bg-card rounded-3xl shadow-xl p-12 border-3 border-primary/20 text-center">
+            <div className="text-8xl mb-6 animate-hedgehog-bounce">🦔</div>
+            <h3 className="text-2xl font-bold text-foreground mb-3">
+              Aucune habitude pour le moment
+            </h3>
+            <p className="text-muted-foreground mb-8 text-lg max-w-md mx-auto">
+              Commencez votre parcours en créant votre première habitude !
+              Votre hérisson a hâte de grandir avec vous. 🌱
+            </p>
+            <button
+              onClick={() => setShowCreateForm(true)}
+              className="bg-primary rounded-3xl text-lg text-white px-6 py-3 font-semibold hover:scale-105 transition-transform shadow-md cursor-pointer"
+            >
+              ✨ Créer ma première habitude
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center flex-wrap gap-4">
+              <h2 className="text-2xl font-bold text-foreground">
+                Mes habitudes
+              </h2>
+              <button
+                onClick={() => setShowCreateForm(true)}
+                className="bg-primary rounded-2xl text-white px-4 py-2 font-medium hover:scale-105 transition-transform shadow-md cursor-pointer flex items-center gap-2"
+              >
+                <Plus />
+                 Nouvelle habitude
+              </button>
+            </div>
+            
+            <div className="grid gap-4">
+              {habits.map((habit) => {
+                const isCompleted = habit.completedToday
+                const isToggling = togglingHabit === habit.id
+                const isWeekly = habit.frequency === 'WEEKLY'
+                
+                return (
+                  <div
+                    key={habit.id}
+                    id={`habit-${habit.id}`}
+                    className={`p-4 bg-white transition-all duration-300 rounded-2xl ${
+                      isCompleted ? 'bg-success/5 border-success/40' : 'bg-card'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between rounded-2xl">
+                      <div className="flex items-center space-x-4 flex-1">
+                        <div className="text-4xl">{habit.emoji}</div>
+                        <div className="flex-1">
+                          <h3 className={`text-lg font-semibold transition-all ${
+                            isCompleted ? 'text-success line-through' : 'text-foreground'
+                          }`}>
+                            {habit.name}
+                          </h3>
+                          <div className="flex flex-wrap gap-1 text-xs mt-1">
+                            <span className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full font-medium ${
+                              habit.type === 'GOOD' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {habit.type === 'GOOD' ? 'Bonne' : 'Mauvaise'}
+                            </span>
+                            <span className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-gray-200 text-gray-800 rounded-full font-medium">
+                              {habit.frequency === 'DAILY' ? 'Quotidienne' : 'Hebdomadaire'}
+                            </span>
+                            {/* {isWeekly && isCompleted && (
+                              <span className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-green-100 text-green-800 rounded-full font-medium">
+                                Complété
+                              </span>
+                            )} */}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        {/* Bouton édition */}
+                        <button
+                          onClick={() => {
+                            setEditingHabit(habit)
+                            setShowEditModal(true)
+                          }}
+                          className="w-10 h-10 rounded-lg  hover:bg-gray-200 transition-colors flex items-center justify-center"
+                          title="Modifier l'habitude"
+                        >
+                          <Pencil className="h-6 w-6 text-primary" />
+                        </button>
+                        
+                        {/* Bouton toggle */}
+                        <button
+                          onClick={() => handleToggleHabit(habit.id)}
+                          disabled={isToggling}
+                          className={`relative w-14 h-14 rounded-2xl border-3 transition-all duration-300 flex items-center justify-center ${
+                            isCompleted
+                              ? 'bg-success border-success shadow-lg scale-100'
+                              : 'bg-input border-border hover:border-primary hover:scale-105'
+                          } ${isToggling ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                          title={
+                            isCompleted 
+                              ? (isWeekly ? 'Décocher (vous perdrez les glands)' : 'Marquer comme non fait')
+                              : 'Marquer comme fait'
+                          }
+                        >
+                          {isToggling ? (
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                            >
+                              <RefreshCw className="h-8 w-8 text-orange-500" />
+                            </motion.div>
+                          ) : isCompleted ? (
+                            <Check className="h-8 w-8 text-white" />
+                          ) : (
+                            <span className="text-2xl text-muted-foreground">  
+</span>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {showCreateForm && (
+          <CreateHabitForm onClose={() => setShowCreateForm(false)} />
+        )}
+
+        {showEditModal && editingHabit && (
+          <EditHabitModal
+            habit={editingHabit}
+            onClose={() => {
+              setShowEditModal(false)
+              setEditingHabit(null)
+            }}
+          />
+        )}
+
+        {showCatchUpModal && missedHabits.length > 0 && (
+          <CatchUpModal
+            missedHabits={missedHabits}
+            onClose={() => {
+              setShowCatchUpModal(false)
+              // Recharger les habitudes après le rattrapage
+              loadHabits()
+            }}
+          />
+        )}
+
+        <MobileNav />
+      </div>
+    </div>
+  )
+}

@@ -229,8 +229,9 @@ export async function getUserHabits() {
           .filter(log => log.date >= weekStart && log.date <= weekEnd)
           .sort((a, b) => b.date.getTime() - a.date.getTime()) // Trier du plus récent au plus ancien
         
-        if (thisWeekLogs.length > 0) {
-          completedToday = thisWeekLogs[0].completed
+        const lastLog = thisWeekLogs[0]
+        if (lastLog) {
+          completedToday = lastLog.completed
         }
       }
       
@@ -294,8 +295,9 @@ export async function toggleHabit(habitId: number, date: Date) {
       })
       
       // L'état visuel est celui du dernier log de la semaine
-      if (weekLogs.length > 0) {
-        currentVisualState = weekLogs[0].completed
+      const lastWeekLog = weekLogs[0]
+      if (lastWeekLog) {
+        currentVisualState = lastWeekLog.completed
       }
     }
 
