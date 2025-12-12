@@ -1,50 +1,48 @@
-# Template Monorepo with Tailwind CSS v4, Shadcn, and Prisma
+Le repo est géré avec Turborepo, ce qui permet un développement rapide à travers plusieurs packages.
 
-This is a template monorepo that includes the following:
+## Pour commencer
 
-- A `web` app built with Next.js, Tailwind CSS v4, and Shadcn
-- A `db` package with Prisma for database operations
-- A `ui` package with a set of reusable React components built with Tailwind CSS v4
-- A `types` package with TypeScript types for the entire monorepo
+### A. Pour lancer le projet sans avoir besoin d'installer localement `pnpm`, vous pouvez exécuter `pnpm` via `npx` 
 
-The monorepo is managed with Turborepo, which allows for fast and efficient development across multiple packages.
+npx -y pnpm@10 install
+npx -y pnpm@10 dev
 
-## Getting Started
+Ces commandes fonctionnent comme si `pnpm` était installé.
 
-1. Clone the repository
-2. Install dependencies with `pnpm install`
-3. Run the development server with `pnpm run dev`
+### B. Si vous préférez installer `pnpm` localement/globalement
+
+- Installer globalement :
+
+npm install -g pnpm
+pnpm install
+pnpm dev
+
+# Informations de base sur la structure
 
 ## Packages
 
 ### `web`
 
-The `web` package is a Next.js app that uses Tailwind CSS v4 and Shadcn. It includes a sample page with a button component from the `ui` package.
+Le package `web` est une application Next.js utilisant Tailwind CSS v4 et Shadcn. Il inclut une page d’exemple avec un bouton provenant du package `ui`.
 
 ### `db`
 
-The `db` package includes Prisma for database operations. It includes a sample schema and a `prisma` command to generate the database client.
+Le package `db` inclut Prisma pour les opérations de base de données. Il contient un schéma d’exemple ainsi qu’une commande `prisma` pour générer le client de base de données.
 
 ### `ui`
 
-The `ui` package includes a set of reusable React components built with Tailwind CSS v4. It includes a sample button component.
+Le package `ui` contient un ensemble de composants React réutilisables construits avec Tailwind CSS v4. Il inclut un composant bouton d’exemple.
 
 ### `types`
 
-The `types` package includes TypeScript types for the entire monorepo. It includes types for the `web`, `db`, and `ui` packages.
+Le package `types` contient les types TypeScript pour tout le monorepo. Il inclut des types pour les packages `web`, `db` et `ui`.
 
-## Development
+## Développement
 
-The monorepo is managed with Turborepo, which allows for fast and efficient development across multiple packages. The `pnpm run dev` command will start the development server for all packages.
+Le repo est géré avec Turborepo, permettant un développement rapide et efficace à travers l’ensemble des packages.  
+La commande `pnpm run dev` démarre le serveur de développement pour tous les packages.
 
-To add a new shadcn component, you can run the following command:
+Pour ajouter un nouveau composant Shadcn, vous pouvez exécuter la commande suivante :
 
 ```bash
-
 pnpm dlx shadcn add <component-name> -c packages/ui
-
-```
-
-## Deployment
-
-The monorepo can be deployed to Vercel by running `pnpm run deploy`. This will deploy the `web` app to Vercel.
