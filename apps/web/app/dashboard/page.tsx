@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Check, Pencil } from 'lucide-react'
+import { Check, Pencil, Plus, RefreshCw } from 'lucide-react'
+import { motion } from 'framer-motion'
 import CreateHabitForm from '@/components/create-habit-form'
 import EditHabitModal from '@/components/edit-habit-modal'
 import CatchUpModal from '@/components/catch-up-modal'
@@ -10,7 +11,6 @@ import { HedgehogDisplay } from '@/components/hedgehog-display'
 import { AcornAnimation } from '@/components/acorn-animation'
 import { getUserHabits, toggleHabit, checkIfShouldShowCatchUp, getMissedHabitsFromYesterday } from '@/lib/habit-actions'
 import { getUserXP } from '@/lib/user-actions'
-import { Plus } from 'lucide-react'
 
 interface HabitLog {
   id: number
@@ -385,7 +385,12 @@ export default function Dashboard() {
                           }
                         >
                           {isToggling ? (
-                            <div className="animate-spin text-2xl">⏳</div>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                            >
+                              <RefreshCw className="h-8 w-8 text-orange-500" />
+                            </motion.div>
                           ) : isCompleted ? (
                             <Check className="h-8 w-8 text-white" />
                           ) : (

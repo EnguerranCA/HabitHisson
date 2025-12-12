@@ -13,7 +13,8 @@ import {
   Sparkles,
   Users,
   Star,
-  ArrowRight 
+  ArrowRight,
+  RefreshCw
 } from 'lucide-react'
 
 export default function LandingPage() {
@@ -44,7 +45,12 @@ export default function LandingPage() {
   if (!mounted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
-        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-500 border-r-transparent"></div>
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+        >
+          <RefreshCw className="h-8 w-8 text-orange-500" />
+        </motion.div>
       </div>
     )
   }

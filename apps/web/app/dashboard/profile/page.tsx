@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { getUserProfile, updateUserProfile, type UserProfile } from '@/lib/profile-actions'
-import { User, Mail, Trophy, Calendar, TrendingUp, CheckCircle, Flame, Info, Sparkles, Target, Baby, Users, LogOut } from 'lucide-react'
+import { User, Mail, Trophy, Calendar, TrendingUp, CheckCircle, Flame, Info, Sparkles, Target, Baby, Users, LogOut, RefreshCw } from 'lucide-react'
 import { MobileNav } from '@/components/mobile-nav'
 import Image from 'next/image'
+import { motion } from 'framer-motion'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -50,7 +51,12 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+        >
+          <RefreshCw className="h-8 w-8 text-orange-500" />
+        </motion.div>
       </div>
     )
   }

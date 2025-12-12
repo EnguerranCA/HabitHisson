@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, TrendingUp, Award, Flame, CheckCircle } from 'lucide-react'
+import { ChevronLeft, ChevronRight, TrendingUp, Award, Flame, CheckCircle, RefreshCw } from 'lucide-react'
 import { getHabitLogsForMonth, HabitLogWithHabit, getHabitStreaks, HabitStreak } from '@/lib/calendar-actions'
 import { MobileNav } from '@/components/mobile-nav'
+import { motion } from 'framer-motion'
 
 export default function CalendarPage() {
   const currentDate = new Date()
@@ -131,7 +132,13 @@ export default function CalendarPage() {
 
       {loading ? (
         <div className="text-center py-12">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            className="inline-block"
+          >
+            <RefreshCw className="h-8 w-8 text-orange-500" />
+          </motion.div>
           <p className="mt-4 text-gray-600">Chargement du calendrier...</p>
         </div>
       ) : (
