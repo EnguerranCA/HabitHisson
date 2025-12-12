@@ -3,6 +3,7 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@repo/db'
 import { redirect } from 'next/navigation'
+import { calculateLevelFromXP } from '@/lib/xp-utils'
 
 export async function getUserXP() {
   const session = await auth()
@@ -18,11 +19,17 @@ export async function getUserXP() {
       where: { id: userId },
       select: {
         xp: true,
-        level: true,
       }
     })
 
-    return user ?? { xp: 0, level: 1 }
+    if (!user) {
+      return { xp: 0, level: 1 }
+    }
+
+    return { 
+      xp: user.xp, 
+      level: calculateLevelFromXP(user.xp) 
+    }
   } catch (error) {
     console.error('Error fetching user XP:', error)
     return { xp: 0, level: 1 }

@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { prisma } from '@repo/db'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { calculateXPGain, calculateLevelFromXP } from '@/lib/xp-utils'
+import { calculateXPGain } from '@/lib/xp-utils'
 
 const CreateHabit = z.object({
   name: z.string().min(1, 'Le nom est requis').max(50, 'Le nom ne peut pas dépasser 50 caractères'),
@@ -223,10 +223,15 @@ export async function getUserHabits() {
           log => log.date.getTime() === dateOnly.getTime() && log.completed
         )
       } else if (habit.frequency === 'WEEKLY') {
-        // Pour les hebdomadaires : vérifier si complété n'importe quel jour cette semaine
-        completedToday = habit.habitLogs.some(
-          log => log.completed && log.date >= weekStart && log.date <= weekEnd
-        )
+        // Pour les hebdomadaires : afficher l'état du DERNIER log de la semaine
+        // Cela permet de décocher même si c'était coché un autre jour
+        const thisWeekLogs = habit.habitLogs
+          .filter(log => log.date >= weekStart && log.date <= weekEnd)
+          .sort((a, b) => b.date.getTime() - a.date.getTime()) // Trier du plus récent au plus ancien
+        
+        if (thisWeekLogs.length > 0) {
+          completedToday = thisWeekLogs[0].completed
+        }
       }
       
       return {
@@ -265,7 +270,36 @@ export async function toggleHabit(habitId: number, date: Date) {
       return { success: false, error: 'Habitude non trouvée.' }
     }
 
-    // Vérifier si le log existe déjà
+    const isWeekly = habit.frequency === 'WEEKLY'
+    
+    // Pour les hebdomadaires : récupérer tous les logs de la semaine
+    let weekLogs: Array<{ id: number; date: Date; completed: boolean }> = []
+    let currentVisualState = false // État visuel actuel (ce que voit l'utilisateur)
+    
+    if (isWeekly) {
+      const weekStart = getStartOfWeek(date)
+      const weekEnd = getEndOfWeek(date)
+      
+      weekLogs = await prisma.habitLog.findMany({
+        where: {
+          habitId,
+          date: {
+            gte: weekStart,
+            lte: weekEnd
+          }
+        },
+        orderBy: {
+          date: 'desc' // Plus récent en premier
+        }
+      })
+      
+      // L'état visuel est celui du dernier log de la semaine
+      if (weekLogs.length > 0) {
+        currentVisualState = weekLogs[0].completed
+      }
+    }
+
+    // Vérifier si le log existe déjà pour ce jour précis
     const existingLog = await prisma.habitLog.findUnique({
       where: {
         habitId_date: {
@@ -275,11 +309,16 @@ export async function toggleHabit(habitId: number, date: Date) {
       }
     })
 
-    const wasCompletedBefore = existingLog?.completed ?? false
-    let willBeCompleted = !wasCompletedBefore
+    // Pour les quotidiennes : l'état visuel est le log d'aujourd'hui
+    if (!isWeekly) {
+      currentVisualState = existingLog?.completed ?? false
+    }
 
+    // L'état après le toggle
+    const newVisualState = !currentVisualState
+
+    // Créer ou mettre à jour le log d'aujourd'hui
     if (existingLog) {
-      // Toggle l'état existant
       await prisma.habitLog.update({
         where: {
           habitId_date: {
@@ -288,110 +327,83 @@ export async function toggleHabit(habitId: number, date: Date) {
           }
         },
         data: {
-          completed: !existingLog.completed
+          completed: newVisualState
         }
       })
-      willBeCompleted = !existingLog.completed
     } else {
-      // Créer un nouveau log (toujours completed=true au premier clic)
       await prisma.habitLog.create({
         data: {
           habitId,
           userId,
           date: dateOnly,
-          completed: true
+          completed: newVisualState
         }
       })
-      willBeCompleted = true
     }
 
     // ═══════════════════════════════════════════════════════════
     // 🌰 GAIN/PERTE D'XP (US10)
     // ═══════════════════════════════════════════════════════════
-    // LOGIQUE:
-    // - BONNE habitude cochée = +XP, décochée = -XP
-    // - MAUVAISE habitude cochée = -XP (tu as fait une mauvaise action), décochée = +XP (tu as résisté)
     let xpGained = 0
     const baseXP = calculateXPGain(habit.frequency as 'DAILY' | 'WEEKLY')
     const isGoodHabit = habit.type === 'GOOD'
     
-    if (willBeCompleted && !wasCompletedBefore) {
-      // L'habitude vient d'être cochée
-      if (isGoodHabit) {
-        // BONNE habitude cochée → +XP
-        xpGained = baseXP
-      } else {
-        // MAUVAISE habitude cochée → -XP (pénalité)
-        xpGained = -baseXP
+    if (newVisualState && !currentVisualState) {
+      // COCHAGE : de décoché → coché
+      // Pour hebdo : vérifier si c'était la première fois cette semaine
+      let shouldGiveXP = true
+      if (isWeekly) {
+        // Compter combien de logs completed=true il y avait AVANT ce toggle (exclure celui d'aujourd'hui)
+        const previousCompletedCount = weekLogs.filter(
+          log => log.completed && log.date.getTime() !== dateOnly.getTime()
+        ).length
+        shouldGiveXP = previousCompletedCount === 0 // Première complétion de la semaine
       }
       
-      // Récupérer l'XP actuel pour éviter qu'il devienne négatif
-      const currentUser = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { xp: true }
-      })
+      if (shouldGiveXP) {
+        xpGained = isGoodHabit ? baseXP : -baseXP
+        
+        const currentUser = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { xp: true }
+        })
 
-      if (!currentUser) {
-        return { success: false, error: 'Utilisateur non trouvé.' }
+        if (currentUser) {
+          const newXP = Math.max(0, currentUser.xp + xpGained)
+          await prisma.user.update({
+            where: { id: userId },
+            data: { xp: newXP }
+          })
+        }
       }
-
-      // Calculer le nouvel XP (minimum 0)
-      const newXP = Math.max(0, currentUser.xp + xpGained)
-      
-      // Mettre à jour l'XP de l'utilisateur
-      const user = await prisma.user.update({
-        where: { id: userId },
-        data: {
-          xp: newXP
-        },
-        select: { xp: true }
-      })
-
-      // Calculer le nouveau niveau
-      const newLevel = calculateLevelFromXP(user.xp)
-      
-      // Mettre à jour le niveau dans la table User
-      await prisma.user.update({
-        where: { id: userId },
-        data: { level: newLevel }
-      })
-    } else if (!willBeCompleted && wasCompletedBefore) {
-      // L'habitude vient d'être décochée
-      if (isGoodHabit) {
-        // BONNE habitude décochée → -XP (retrait du bonus)
-        xpGained = -baseXP
-      } else {
-        // MAUVAISE habitude décochée → +XP (récompense pour avoir résisté)
-        xpGained = baseXP
+    } else if (!newVisualState && currentVisualState) {
+      // DÉCOCHAGE : de coché → décoché
+      // Pour hebdo : vérifier si c'était le dernier log complété de la semaine
+      let shouldRemoveXP = true
+      if (isWeekly) {
+        // Compter combien de logs completed=true il reste APRÈS ce toggle (exclure celui d'aujourd'hui)
+        const remainingCompletedCount = weekLogs.filter(
+          log => log.completed && log.date.getTime() !== dateOnly.getTime()
+        ).length
+        shouldRemoveXP = remainingCompletedCount === 0 // Plus aucun log complété cette semaine
       }
       
-      // Récupérer l'XP actuel pour éviter qu'il devienne négatif
-      const currentUser = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { xp: true }
-      })
+      if (shouldRemoveXP) {
+        xpGained = isGoodHabit ? -baseXP : baseXP
+        
+        const currentUser = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { xp: true }
+        })
 
-      if (!currentUser) {
-        return { success: false, error: 'Utilisateur non trouvé.' }
+        if (currentUser) {
+          const newXP = Math.max(0, currentUser.xp + xpGained)
+          await prisma.user.update({
+            where: { id: userId },
+            data: { xp: newXP }
+          })
+        }
       }
-
-      // Calculer le nouvel XP (minimum 0)
-      const newXP = Math.max(0, currentUser.xp + xpGained)
-      
-      const user = await prisma.user.update({
-        where: { id: userId },
-        data: {
-          xp: newXP
-        },
-        select: { xp: true }
-      })
-
-      const newLevel = calculateLevelFromXP(user.xp)
-      
-      await prisma.user.update({
-        where: { id: userId },
-        data: { level: newLevel }
-      })
     }
 
     revalidatePath('/dashboard')
@@ -559,10 +571,7 @@ export async function checkIfShouldShowCatchUp() {
         update: { lastLoginDate: todayDate },
         create: {
           userId,
-          lastLoginDate: todayDate,
-          totalXp: 0,
-          currentLevel: 1,
-          bestStreak: 0
+          lastLoginDate: todayDate
         }
       })
       return true // Premier login, vérifier les habitudes manquées

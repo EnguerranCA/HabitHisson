@@ -19,9 +19,7 @@ model User {
   email         String    @unique
   name          String
   password      String    // Hashé avec bcrypt
-  level         Int       @default(1)
-  xp            Int       @default(0)  // Glands collectés
-  hedgehogState String    @default("baby") // baby, child, teen, adult, elder
+  xp            Int       @default(0)  // Glands collectés (level calculé dynamiquement: √(xp/100))
   profilePublic Boolean   @default(false) // US16: profils publics opt-in
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -34,7 +32,7 @@ model User {
   userBadges      UserBadge[]
   userDecorations UserDecoration[]
 
-  @@index([level, xp]) // Pour les classements (US15)
+  @@index([xp]) // Pour les classements (US15) triés par XP
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -91,9 +89,6 @@ model HabitLog {
 model UserProgress {
   id             Int       @id @default(autoincrement())
   userId         Int       @unique
-  totalXp        Int       @default(0)
-  currentLevel   Int       @default(1)
-  bestStreak     Int       @default(0) // Meilleur streak global tous habitudes confondues
   lastLoginDate  DateTime? // Pour popup rattrapage (US6)
   lastActivity   DateTime?
   createdAt      DateTime  @default(now())

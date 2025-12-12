@@ -2,6 +2,7 @@
 
 import { prisma } from '@repo/db'
 import { auth } from '@/lib/auth'
+import { calculateLevelFromXP } from '@/lib/xp-utils'
 
 export interface LeaderboardEntry {
   rank: number
@@ -56,12 +57,10 @@ export async function getLeaderboard(period: 'week' | 'month' | 'all-time' = 'al
       select: {
         id: true,
         name: true,
-        level: true,
         xp: true,
       },
       orderBy: [
         { xp: 'desc' },
-        { level: 'desc' },
       ],
     })
 
@@ -72,7 +71,7 @@ export async function getLeaderboard(period: 'week' | 'month' | 'all-time' = 'al
       rank: index + 1,
       userId: user.id,
       name: user.name || `Joueur ${user.id}`,
-      level: user.level,
+      level: calculateLevelFromXP(user.xp),
       xp: user.xp,
       isCurrentUser: user.id === currentUserId
     }))
